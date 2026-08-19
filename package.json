@@ -1,6 +1,6 @@
 {
-  "name": "local-business-jsonld",
-  "version": "0.0.0",
+  "name": "@codexastudio/local-business-jsonld",
+  "version": "0.1.0",
   "description": "Typed schema.org LocalBusiness JSON-LD generator with an opening-hours DSL and @graph composition. Zero runtime dependencies.",
   "keywords": [
     "json-ld",
@@ -17,6 +17,15 @@
   ],
   "license": "MIT",
   "author": "CodexaStudio",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodexaStudio-fr/local-business-jsonld.git"
+  },
+  "homepage": "https://github.com/CodexaStudio-fr/local-business-jsonld#readme",
+  "bugs": "https://github.com/CodexaStudio-fr/local-business-jsonld/issues",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [

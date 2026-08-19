@@ -1,4 +1,4 @@
-# local-business-jsonld
+# @codexastudio/local-business-jsonld
 
 Générateur JSON-LD `LocalBusiness` typé pour schema.org. **Zéro dépendance runtime.**
 
@@ -6,12 +6,12 @@ Générateur JSON-LD `LocalBusiness` typé pour schema.org. **Zéro dépendance 
 > les noms suivent schema.org.
 
 ```bash
-pnpm add local-business-jsonld
+pnpm add @codexastudio/local-business-jsonld
 ```
 
 ```tsx
-import { localBusiness } from "local-business-jsonld";
-import { JsonLd } from "local-business-jsonld/next";
+import { localBusiness } from "@codexastudio/local-business-jsonld";
+import { JsonLd } from "@codexastudio/local-business-jsonld/next";
 
 const jsonLd = localBusiness({
   type: "Plumber",
@@ -54,15 +54,18 @@ créneau, comme l'exige schema.org), une pour le samedi. Les jours qui partagent
 toujours de lundi à dimanche.
 
 `"24/7"`, `"Su off"`, `"Fr-Mo 09:00-18:00"` (wrap-around), `"Th 22:00-02:00"`
-(chevauchement de minuit) fonctionnent. Détails et cas limites :
-[docs/opening-hours.md](./docs/opening-hours.md).
+(chevauchement de minuit) fonctionnent. Une règle plus tardive **remplace** les
+créneaux des jours qu'elle nomme, ce qui rend
+`"Mo-Fr 09:00-18:00; We off"` et `"Mo-Fr 09:00-18:00; Fr 09:00-12:00"` naturels.
+Les cas limites sont tous couverts par `test/opening-hours.test.ts`, qui vaut
+table de référence.
 
 ### 2. La composition en `@graph`
 
 Un seul `<script>`, tous les nœuds reliés par `@id` :
 
 ```ts
-import { breadcrumbs, faq, graph, localBusiness, website } from "local-business-jsonld";
+import { breadcrumbs, faq, graph, localBusiness, website } from "@codexastudio/local-business-jsonld";
 
 const jsonLd = graph(
   { baseUrl: "https://plomberie-dupont.fr" },
@@ -127,7 +130,7 @@ flappent pas.
 ### Rendu
 
 ```tsx
-import { JsonLd } from "local-business-jsonld/next";
+import { JsonLd } from "@codexastudio/local-business-jsonld/next";
 
 <JsonLd data={jsonLd} id="ld-business" nonce={nonce} />;
 ```
@@ -138,7 +141,7 @@ d'hydratation. Rien n'est spécifique à Next — n'importe quel rendu React mar
 Hors React :
 
 ```ts
-import { serialize } from "local-business-jsonld";
+import { serialize } from "@codexastudio/local-business-jsonld";
 
 const html = `<script type="application/ld+json">${serialize(jsonLd)}</script>`;
 ```
@@ -151,7 +154,7 @@ XSS. **N'interpolez jamais du JSON-LD dans un `<script>` sans passer par là.**
 ### Validation
 
 ```ts
-import { validate } from "local-business-jsonld/validate";
+import { validate } from "@codexastudio/local-business-jsonld/validate";
 
 const { valid, errors, warnings } = validate(jsonLd);
 ```
@@ -211,16 +214,14 @@ Dual ESM/CJS, `.d.ts` et `.d.cts`. Vérifié en CI par `publint` et
 
 ---
 
-## Documentation
+## Pour aller plus loin
 
-- [docs/opening-hours.md](./docs/opening-hours.md) — grammaire du DSL, fusion,
-  cas limites, horaires exceptionnels.
-- [docs/recipes.md](./docs/recipes.md) — site d'artisan, restaurant,
-  multi-établissements.
-- [docs/migration-next-seo.md](./docs/migration-next-seo.md) — table de
-  correspondance depuis `next-seo/jsonld`.
 - [examples/next-app](./examples/next-app) — App Router minimal, une page
-  artisan.
+  artisan : composition du `@graph`, `<JsonLd>` dans le layout, et le rapport de
+  `validate()` affiché dans la page.
+- `test/opening-hours.test.ts` — le tableau de cas du DSL, exhaustif.
+- Les JSDoc de l'API : les types d'entrée documentent chaque champ et les
+  58 sous-types métier portent leur libellé français.
 
 ## Statut
 

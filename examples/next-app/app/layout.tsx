@@ -1,4 +1,4 @@
-import { JsonLd } from "local-business-jsonld/next";
+import { JsonLd } from "@codexastudio/local-business-jsonld/next";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { BUSINESS, buildJsonLd, SITE_URL } from "@/lib/business";

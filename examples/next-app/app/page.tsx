@@ -1,5 +1,5 @@
-import { serialize } from "local-business-jsonld";
-import { validate } from "local-business-jsonld/validate";
+import { serialize } from "@codexastudio/local-business-jsonld";
+import { validate } from "@codexastudio/local-business-jsonld/validate";
 import { BUSINESS, buildJsonLd, QUESTIONS } from "@/lib/business";
 
 const jsonLd = buildJsonLd();

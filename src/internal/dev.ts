@@ -9,5 +9,5 @@ export function isDev(): boolean {
 
 /** Écrit un avertissement, sauf en production. */
 export function warnInDev(message: string): void {
-  if (isDev()) console.warn(`[local-business-jsonld] ${message}`);
+  if (isDev()) console.warn(`[@codexastudio/local-business-jsonld] ${message}`);
 }

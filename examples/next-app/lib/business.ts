@@ -1,4 +1,10 @@
-import { breadcrumbs, faq, graph, localBusiness, website } from "local-business-jsonld";
+import {
+  breadcrumbs,
+  faq,
+  graph,
+  localBusiness,
+  website,
+} from "@codexastudio/local-business-jsonld";
 
 export const SITE_URL = "https://plomberie-dupont.example";
 

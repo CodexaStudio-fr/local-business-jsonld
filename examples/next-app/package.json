@@ -8,7 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "local-business-jsonld": "file:../..",
+    "@codexastudio/local-business-jsonld": "file:../..",
     "next": "^16",
     "react": "^19",
     "react-dom": "^19"
