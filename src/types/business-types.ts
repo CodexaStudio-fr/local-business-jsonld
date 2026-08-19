@@ -151,3 +151,73 @@ export type LocalBusinessType =
  * sur l'union curée (astuce `string & {}`).
  */
 export type AnyLocalBusinessType = LocalBusinessType | (string & {});
+
+/**
+ * La même liste, disponible à l'exécution — `validate()` a besoin de savoir
+ * quels `@type` relèvent des règles LocalBusiness de Google.
+ *
+
+ * C'est le seul code exécutable de `src/types/`. L'annotation interdit qu'un type
+ * étranger à l'union s'y glisse, et `test/business-types.test.ts` vérifie
+ * l'inverse — que l'union ne contient rien qui manque au tableau.
+ */
+export const LOCAL_BUSINESS_TYPES: readonly LocalBusinessType[] = [
+  "LocalBusiness",
+  "HomeAndConstructionBusiness",
+  "Plumber",
+  "Electrician",
+  "HVACBusiness",
+  "RoofingContractor",
+  "GeneralContractor",
+  "HousePainter",
+  "Locksmith",
+  "MovingCompany",
+  "AutomotiveBusiness",
+  "AutoRepair",
+  "AutoBodyShop",
+  "AutoWash",
+  "GasStation",
+  "HealthAndBeautyBusiness",
+  "HairSalon",
+  "BeautySalon",
+  "NailSalon",
+  "DaySpa",
+  "TattooParlor",
+  "Dentist",
+  "Physiotherapy",
+  "Optician",
+  "Pharmacy",
+  "MedicalClinic",
+  "FoodEstablishment",
+  "Restaurant",
+  "CafeOrCoffeeShop",
+  "BarOrPub",
+  "FastFoodRestaurant",
+  "Bakery",
+  "IceCreamShop",
+  "Winery",
+  "ProfessionalService",
+  "LegalService",
+  "Attorney",
+  "Notary",
+  "AccountingService",
+  "InsuranceAgency",
+  "RealEstateAgent",
+  "TravelAgency",
+  "Store",
+  "ClothingStore",
+  "HardwareStore",
+  "HomeGoodsStore",
+  "Florist",
+  "GardenStore",
+  "GroceryStore",
+  "SportsActivityLocation",
+  "ExerciseGym",
+  "HealthClub",
+  "LodgingBusiness",
+  "Hotel",
+  "BedAndBreakfast",
+  "ChildCare",
+  "DryCleaningOrLaundry",
+  "SelfStorage",
+];

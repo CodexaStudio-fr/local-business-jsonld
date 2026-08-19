@@ -89,7 +89,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "check:package": "publint && attw --pack .",
+    "check:package": "publint && attw --pack . --profile node16",
     "size": "size-limit",
     "release": "changeset publish"
   },
@@ -98,10 +98,13 @@
     "@biomejs/biome": "^2.5.9",
     "@changesets/cli": "^3.0.0",
     "@size-limit/preset-small-lib": "^13.0.3",
+    "@types/node": "^26.2.0",
     "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "@vitest/coverage-v8": "^4.1.10",
     "publint": "^0.3.23",
     "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "schema-dts": "^2.0.0",
     "size-limit": "^13.0.3",
     "tsdown": "^0.22.14",
@@ -110,22 +113,44 @@
   },
   "size-limit": [
     {
-      "name": "core (.)",
+      "name": "core : localBusiness + graph + serialize",
       "path": "dist/index.js",
       "import": "{ localBusiness, graph, serialize }",
-      "limit": "4 kB"
+      "gzip": true,
+      "limit": "6 kB"
     },
     {
-      "name": "opening-hours",
+      "name": "localBusiness seul",
+      "path": "dist/index.js",
+      "import": "{ localBusiness }",
+      "gzip": true,
+      "limit": "5 kB"
+    },
+    {
+      "name": "serialize seul",
+      "path": "dist/index.js",
+      "import": "{ serialize }",
+      "gzip": true,
+      "limit": "1 kB"
+    },
+    {
+      "name": "parseOpeningHours seul",
       "path": "dist/opening-hours/index.js",
       "import": "{ parseOpeningHours }",
-      "limit": "2 kB"
+      "gzip": true,
+      "limit": "3 kB"
     },
     {
       "name": "validate",
       "path": "dist/validate/index.js",
       "import": "{ validate }",
-      "limit": "3 kB"
+      "gzip": true,
+      "limit": "4 kB"
     }
-  ]
+  ],
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
 }

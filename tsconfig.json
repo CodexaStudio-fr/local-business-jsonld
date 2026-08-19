@@ -6,7 +6,9 @@
     "moduleResolution": "bundler",
     "moduleDetection": "force",
     "jsx": "react-jsx",
-    "types": [],
+    // Uniquement pour les tests (node:fs). `src/` est interdit d'importer un
+    // module Node par la règle Biome noNodejsModules — le paquet reste neutre.
+    "types": ["node"],
 
     "strict": true,
     "noUncheckedIndexedAccess": true,
