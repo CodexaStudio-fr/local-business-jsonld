@@ -1,0 +1,106 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`localBusiness — cas artisan complet > correspond au snapshot de référence 1`] = `
+{
+  "@context": "https://schema.org",
+  "@id": "https://plomberie-dupont.fr/#business",
+  "@type": "Plumber",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "FR",
+    "addressLocality": "Le Mans",
+    "addressRegion": "Pays de la Loire",
+    "postalCode": "72000",
+    "streetAddress": "12 rue Nationale",
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": 4.8,
+    "reviewCount": 37,
+  },
+  "areaServed": [
+    "Le Mans",
+    "Sarthe",
+    "Pays de la Loire",
+  ],
+  "currenciesAccepted": "EUR",
+  "description": "Dépannage et installation sanitaire au Mans depuis 1998.",
+  "email": "contact@plomberie-dupont.fr",
+  "founder": {
+    "@type": "Person",
+    "name": "Marc Dupont",
+  },
+  "foundingDate": "1998",
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 48.0061,
+    "longitude": 0.1996,
+  },
+  "image": [
+    "https://plomberie-dupont.fr/og-1x1.jpg",
+    "https://plomberie-dupont.fr/og-4x3.jpg",
+    "https://plomberie-dupont.fr/og-16x9.jpg",
+  ],
+  "logo": "https://plomberie-dupont.fr/logo.png",
+  "name": "Plomberie Dupont",
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "closes": "12:00",
+      "dayOfWeek": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+      ],
+      "opens": "08:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "closes": "18:00",
+      "dayOfWeek": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+      ],
+      "opens": "14:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "closes": "12:00",
+      "dayOfWeek": [
+        "Saturday",
+      ],
+      "opens": "09:00",
+    },
+  ],
+  "paymentAccepted": "Cash, CreditCard, CheckInAdvance",
+  "priceRange": "€€",
+  "sameAs": [
+    "https://www.facebook.com/plomberiedupont",
+    "https://g.page/plomberie-dupont",
+  ],
+  "specialOpeningHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "closes": "00:00",
+      "opens": "00:00",
+      "validFrom": "2026-12-25",
+      "validThrough": "2026-12-25",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "closes": "00:00",
+      "opens": "00:00",
+      "validFrom": "2026-08-01",
+      "validThrough": "2026-08-15",
+    },
+  ],
+  "telephone": "+33243123456",
+  "url": "https://plomberie-dupont.fr",
+  "vatID": "FR12345678901",
+}
+`;

@@ -65,8 +65,9 @@ export type LocalBusinessType =
   | "Pharmacy"
   /** Cabinet médical, centre de santé. */
   | "MedicalClinic"
-  /** Cabinet vétérinaire. */
-  | "VeterinaryCare"
+  // Pas de vétérinaire ici : schema.org place `VeterinaryCare` sous
+  // `MedicalOrganization`, pas sous `LocalBusiness`. L'échappatoire
+  // {@link AnyLocalBusinessType} l'accepte quand même à l'exécution.
 
   // ── Restauration, alimentation ────────────────────────────────────────────
   /** Établissement de restauration, générique. */

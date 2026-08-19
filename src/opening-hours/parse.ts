@@ -193,8 +193,10 @@ function applyRule(week: WeekSlots, rule: Fragment): void {
  * @throws {InvalidTimeError} heure hors bornes, mal formée, ou créneau nul
  * @throws {OpeningHoursError} règle incomplète
  */
-export function parseOpeningHours(input: string | string[]): OpeningHoursSpecificationNode[] {
-  const source = Array.isArray(input) ? input.join("; ") : input;
+export function parseOpeningHours(
+  input: string | readonly string[],
+): OpeningHoursSpecificationNode[] {
+  const source = typeof input === "string" ? input : input.join("; ");
   if (source.trim() === "") return [];
 
   const week: WeekSlots = new Map();
@@ -239,7 +241,7 @@ function normalizeSpecialTime(value: string): string {
  * L'ordre des entrées est conservé.
  */
 export function parseSpecialOpeningHours(
-  entries: SpecialHoursInput[],
+  entries: readonly SpecialHoursInput[],
 ): OpeningHoursSpecificationNode[] {
   const specs: OpeningHoursSpecificationNode[] = [];
 

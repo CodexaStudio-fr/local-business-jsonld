@@ -84,7 +84,7 @@
     "build": "tsdown",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:types": "vitest run --typecheck --dir test",
+    "test:types": "vitest run --typecheck.only",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",

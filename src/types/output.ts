@@ -58,12 +58,16 @@ export interface GeoCoordinatesNode {
   longitude: number;
 }
 
+/**
+ * `width` et `height` sont volontairement absents : schema.org les type en
+ * `Distance | QuantitativeValue`, pas en nombre, et Google n'en a pas besoin
+ * pour les rich results d'un LocalBusiness. Émettre `"width": 1200` produirait
+ * un avertissement du Schema Markup Validator.
+ */
 export interface ImageObjectNode {
   "@type": "ImageObject";
   url: string;
   contentUrl?: string;
-  width?: number;
-  height?: number;
   caption?: string;
 }
 
@@ -96,7 +100,7 @@ export interface PersonNode {
 export interface ReviewNode {
   "@type": "Review";
   "@id"?: string;
-  author?: PersonNode | OrganizationNode | IdRef;
+  author?: PersonNode | IdRef;
   datePublished?: string;
   name?: string;
   reviewBody?: string;
@@ -104,14 +108,14 @@ export interface ReviewNode {
   itemReviewed?: IdRef;
 }
 
-export interface OrganizationNode {
-  "@type": "Organization" | (string & {});
+export interface OrganizationNode<T extends string = "Organization"> {
+  "@type": T;
   "@id"?: string;
   name?: string;
   legalName?: string;
   url?: string;
   logo?: string | ImageObjectNode;
-  image?: string | string[] | ImageObjectNode | ImageObjectNode[];
+  image?: (string | ImageObjectNode)[];
   description?: string;
   email?: string;
   telephone?: string;
@@ -144,7 +148,7 @@ export interface LocalBusinessNode<T extends string = AnyLocalBusinessType> {
   priceRange?: string;
   currenciesAccepted?: string;
   paymentAccepted?: string;
-  image?: string[] | ImageObjectNode[];
+  image?: (string | ImageObjectNode)[];
   logo?: string | ImageObjectNode;
   address?: PostalAddressNode;
   geo?: GeoCoordinatesNode;
@@ -227,8 +231,8 @@ export interface OfferNode {
   availability?: string;
 }
 
-export interface ServiceNode {
-  "@type": "Service" | (string & {});
+export interface ServiceNode<T extends string = "Service"> {
+  "@type": T;
   "@id"?: string;
   name?: string;
   description?: string;
@@ -242,11 +246,11 @@ export interface ServiceNode {
 /** Tout nœud que `graph()` sait composer. */
 export type GraphNode =
   | LocalBusinessNode<string>
-  | OrganizationNode
+  | OrganizationNode<string>
   | WebSiteNode
   | BreadcrumbListNode
   | FAQPageNode
-  | ServiceNode
+  | ServiceNode<string>
   | ReviewNode
   | PersonNode;
 

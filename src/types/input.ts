@@ -8,8 +8,11 @@ import type { AnyLocalBusinessType } from "./business-types.js";
 /** Référence à un autre nœud : `"#business"`, une URL absolue, ou `{ "@id": … }`. */
 export type Ref = string | { "@id": string };
 
-/** Une valeur ou une liste de valeurs. */
-export type OneOrMany<T> = T | T[];
+/**
+ * Une valeur ou une liste de valeurs. La liste est `readonly` : les objets de
+ * configuration figés par `as const` doivent passer sans copie manuelle.
+ */
+export type OneOrMany<T> = T | readonly T[];
 
 export interface AddressInput {
   /** Numéro et rue. → `streetAddress` */
@@ -37,8 +40,7 @@ export interface GeoInput {
 
 export interface ImageInput {
   url: string;
-  width?: number;
-  height?: number;
+  /** Légende. Les dimensions ne sont pas exposées : voir `ImageObjectNode`. */
   caption?: string;
 }
 
@@ -148,9 +150,9 @@ export interface LocalBusinessInput<T extends AnyLocalBusinessType = AnyLocalBus
   /** Langues parlées, codes BCP 47 (`"fr"`, `"en"`). */
   knowsLanguage?: OneOrMany<string>;
   /** DSL d'horaires, ex. `"Mo-Fr 08:00-12:00,14:00-18:00; Sa 09:00-12:00"`. */
-  openingHours?: string | string[];
+  openingHours?: string | readonly string[];
   /** Fermetures et horaires exceptionnels. */
-  specialOpeningHours?: SpecialHoursInput[];
+  specialOpeningHours?: readonly SpecialHoursInput[];
   /** Profils externes : réseaux sociaux, fiche Google, annuaires. */
   sameAs?: OneOrMany<string>;
   /**
@@ -159,7 +161,7 @@ export interface LocalBusinessInput<T extends AnyLocalBusinessType = AnyLocalBus
    */
   aggregateRating?: AggregateRatingInput;
   /** Avis individuels. Même réserve que `aggregateRating`. */
-  review?: ReviewInput[];
+  review?: readonly ReviewInput[];
   founder?: string | PersonInput | Ref;
   /** Année ou date de création (`"1998"` ou `"1998-04-12"`). */
   foundingDate?: string;
@@ -248,7 +250,7 @@ export interface ServiceInput {
   /** Prestataire : référence vers le nœud `LocalBusiness`. */
   provider?: Ref;
   areaServed?: OneOrMany<string>;
-  offers?: OfferInput[];
+  offers?: readonly OfferInput[];
 }
 
 /** Options de `graph()`. */
