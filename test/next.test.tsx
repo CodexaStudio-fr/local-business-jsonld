@@ -47,7 +47,6 @@ describe("JsonLd — rendu", () => {
 describe("JsonLd — inertie du contenu injecté (§8.1)", () => {
   it("ne referme jamais la balise script depuis les données", () => {
     const html = renderToStaticMarkup(<JsonLd data={localBusiness({ name: PAYLOAD })} />);
-    // Une seule ouverture, une seule fermeture : la charge n'a pas cassé la balise.
     expect(html.match(/<script/g)).toHaveLength(1);
     expect(html.match(/<\/script>/g)).toHaveLength(1);
   });
@@ -64,8 +63,6 @@ describe("JsonLd — server component (§8.10)", () => {
   const source = readFileSync(new URL("../src/next/index.tsx", import.meta.url), "utf8");
 
   it("ne porte pas la directive client", () => {
-    // La directive est une instruction-chaîne seule sur sa ligne ; une mention
-    // en commentaire n'en est pas une.
     expect(source).not.toMatch(/^\s*["']use client["'];?\s*$/m);
   });
 

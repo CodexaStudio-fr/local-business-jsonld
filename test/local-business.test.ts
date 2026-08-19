@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { localBusiness } from "../src/builders/local-business.js";
 import { InvalidPhoneError } from "../src/internal/phone.js";
 
-/** Le cas artisan complet de §1.1, qui sert de référence au snapshot. */
 const ARTISAN = {
   type: "Plumber",
   id: "https://plomberie-dupont.fr/#business",

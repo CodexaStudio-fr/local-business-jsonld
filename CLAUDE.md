@@ -7,7 +7,13 @@ Générateur JSON-LD schema.org LocalBusiness. Zéro dépendance runtime.
 - **Aucune dépendance runtime.** Toute proposition d'ajout dans `dependencies` doit
   être refusée et signalée. `devDependencies` et `peerDependencies` optionnelles OK.
 - `schema-dts` est une devDependency de test uniquement. Ne jamais l'importer dans `src/`.
-- TypeScript strict, pas de `any`, pas de `as` sauf dans `internal/` avec commentaire justificatif.
+- TypeScript strict, pas de `any`. Les `as` sont limités à trois endroits, listés
+  dans `docs/decisions.md` : `src/internal/`, le repli de `@type` dans les
+  builders génériques, et le retour de `graph()`.
+- **Pas de commentaire explicatif dans le code.** JSDoc d'une à deux lignes sur
+  l'API publique, rien de plus. Ce qui mérite une explication va dans `docs/`,
+  et les suppressions de règles de lint vont dans `biome.json`, pas en
+  `biome-ignore` au fil du code.
 - Toute sortie JSON-LD doit être assignable à `WithContext<LocalBusiness>` (test de types).
 - Le composant `<JsonLd>` est un server component : aucun hook, aucun `"use client"`.
 - Toute chaîne interpolée dans un `<script>` passe par `serialize()` (échappement `<`, `>`, `&`).

@@ -1,11 +1,3 @@
-/**
- * Tests de types. `schema-dts` est la référence de vérité sur ce qui est du
- * schema.org valide ; il n'est **jamais** importé depuis `src/` (§8.7).
- *
- * Ce fichier est la garantie que l'ergonomie de l'API ne s'est pas payée en
- * sortie invalide.
- */
-
 import type {
   BreadcrumbList,
   FAQPage,
@@ -28,11 +20,6 @@ import { service } from "../src/builders/service.js";
 import { website } from "../src/builders/website.js";
 import type { AnyLocalBusinessType, LocalBusinessType } from "../src/types/business-types.js";
 
-/**
- * Extrait tous les `@type` littéraux présents sous `LocalBusiness` dans
- * schema-dts. Le membre `string` de l'union ne porte pas de `@type` et tombe
- * donc naturellement.
- */
 type SchemaLocalBusinessTypeName = LocalBusiness extends infer Member
   ? Member extends { "@type": infer Name }
     ? Name
@@ -107,10 +94,6 @@ test("sans @type explicite, le retour est un LocalBusiness générique", () => {
   expectTypeOf(node["@type"]).toEqualTypeOf<"LocalBusiness">();
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Builders secondaires
-// ─────────────────────────────────────────────────────────────────────────────
-
 test("website est assignable à WithContext<WebSite>", () => {
   const node = website({
     id: "#website",
@@ -158,12 +141,6 @@ test("review est assignable à WithContext<Review>", () => {
   expectTypeOf(node).toExtend<WithContext<Review>>();
 });
 
-/**
- * Écart assumé : schema.org type `ListItem.item` en `Thing`, mais Google
- * documente — et son Rich Results Test attend — une URL en chaîne. On suit
- * Google, donc `itemListElement` est exclu de l'assertion. Tout le reste du
- * nœud est vérifié.
- */
 test("breadcrumbs est assignable à BreadcrumbList, itemListElement excepté", () => {
   const node = breadcrumbs([{ name: "Accueil", url: "https://x.fr" }, { name: "Dépannage" }]);
   expectTypeOf(node).toExtend<WithContext<Omit<BreadcrumbList, "itemListElement">>>();

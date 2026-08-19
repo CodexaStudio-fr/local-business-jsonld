@@ -1,14 +1,5 @@
-/**
- * `local-business-jsonld` — générateur JSON-LD schema.org `LocalBusiness`.
- *
- * Zéro dépendance runtime. Ce fichier ne contient que des ré-exports.
- *
- * ```ts
- * import { graph, localBusiness, serialize, website } from "local-business-jsonld";
- * ```
- */
+/** Générateur JSON-LD schema.org LocalBusiness. Zéro dépendance runtime. */
 
-// ── Builders ──────────────────────────────────────────────────────────────────
 export { breadcrumbs } from "./builders/breadcrumbs.js";
 export { faq } from "./builders/faq.js";
 export { type GraphMember, graph } from "./builders/graph.js";
@@ -17,10 +8,8 @@ export { organization } from "./builders/organization.js";
 export { review } from "./builders/review.js";
 export { service } from "./builders/service.js";
 export { website } from "./builders/website.js";
-// ── Erreurs des entrées ───────────────────────────────────────────────────────
 export { InvalidPhoneError } from "./internal/phone.js";
 export { InvalidUrlError } from "./internal/url.js";
-// ── DSL d'horaires ────────────────────────────────────────────────────────────
 export { DAY_NAMES, dayName } from "./opening-hours/days.js";
 export {
   InvalidDateError,
@@ -29,10 +18,8 @@ export {
   OpeningHoursError,
 } from "./opening-hours/errors.js";
 export { parseOpeningHours, parseSpecialOpeningHours } from "./opening-hours/parse.js";
-// ── Rendu ─────────────────────────────────────────────────────────────────────
 export { type SerializeOptions, serialize } from "./serialize.js";
 
-// ── Types d'entrée ────────────────────────────────────────────────────────────
 export type {
   AnyLocalBusinessType,
   LocalBusinessType,
@@ -60,7 +47,6 @@ export type {
   WebSiteInput,
 } from "./types/input.js";
 
-// ── Types de sortie ───────────────────────────────────────────────────────────
 export type {
   AggregateRatingNode,
   AnswerNode,

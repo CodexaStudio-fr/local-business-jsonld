@@ -23,7 +23,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           padding: "2rem 1.25rem 4rem",
         }}
       >
-        {/* Un seul script pour les quatre nœuds. Server component : aucune hydratation. */}
         <JsonLd data={jsonLd} id="ld-plomberie-dupont" />
         {children}
       </body>

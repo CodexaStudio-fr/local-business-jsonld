@@ -1,9 +1,5 @@
 import { breadcrumbs, faq, graph, localBusiness, website } from "local-business-jsonld";
 
-/**
- * Une seule constante à changer pour rebrancher tout le balisage : les URLs des
- * builders sont relatives, `graph({ baseUrl })` les résout.
- */
 export const SITE_URL = "https://plomberie-dupont.example";
 
 export const BUSINESS = {
@@ -35,12 +31,6 @@ export const QUESTIONS = [
   },
 ] as const;
 
-/**
- * Le balisage de la page d'accueil : quatre nœuds reliés, un seul `@context`.
- *
- * Remarquez le téléphone saisi au format français — il sort en `+33243123456` —
- * et les URLs relatives, résolues d'un coup par `baseUrl`.
- */
 export function buildJsonLd() {
   return graph(
     { baseUrl: SITE_URL },
@@ -57,7 +47,6 @@ export function buildJsonLd() {
       priceRange: "€€",
       currenciesAccepted: "EUR",
       paymentAccepted: ["Cash", "CreditCard", "CheckInAdvance"],
-      // Les trois ratios que recommande Google : 1:1, 4:3, 16:9.
       image: ["/og-1x1.jpg", "/og-4x3.jpg", "/og-16x9.jpg"],
       logo: "/logo.png",
       address: {

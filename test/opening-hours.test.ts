@@ -8,7 +8,6 @@ import {
   parseSpecialOpeningHours,
 } from "../src/opening-hours/index.js";
 
-/** Raccourci de lecture pour les attentes. */
 const spec = (dayOfWeek: string[], opens: string, closes: string) => ({
   "@type": "OpeningHoursSpecification",
   dayOfWeek,
@@ -18,10 +17,6 @@ const spec = (dayOfWeek: string[], opens: string, closes: string) => ({
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const ALL_DAYS = [...WEEKDAYS, "Saturday", "Sunday"];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// §2.2 — tableau des cas limites, une ligne = un test
-// ─────────────────────────────────────────────────────────────────────────────
 
 describe("§2.2 cas limites", () => {
   it('"Mo-Fr 09:00-18:00" → 1 spec, lundi à vendredi', () => {
@@ -99,10 +94,6 @@ describe("§2.2 cas limites", () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// §2.3 — fusion des jours partageant exactement les mêmes créneaux
-// ─────────────────────────────────────────────────────────────────────────────
-
 describe("§2.3 fusion", () => {
   it("fusionne Mo-Fr 9-18 et Sa 9-18 en une seule spec de 6 jours", () => {
     expect(parseOpeningHours("Mo-Fr 09:00-18:00; Sa 09:00-18:00")).toEqual([
@@ -147,10 +138,6 @@ describe("§2.3 fusion", () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Règle de recouvrement : la dernière mention d'un jour gagne
-// ─────────────────────────────────────────────────────────────────────────────
-
 describe("recouvrement des règles", () => {
   it("une règle ultérieure remplace les créneaux du jour qu'elle nomme", () => {
     expect(parseOpeningHours("Mo-Fr 09:00-18:00; Fr 09:00-12:00")).toEqual([
@@ -165,10 +152,6 @@ describe("recouvrement des règles", () => {
     ]);
   });
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Tolérance de la grammaire (§2.1)
-// ─────────────────────────────────────────────────────────────────────────────
 
 describe("§2.1 tolérance de syntaxe", () => {
   it("est insensible à la casse", () => {
@@ -214,10 +197,6 @@ describe("§2.1 tolérance de syntaxe", () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// §8.4 — convention des 24 heures
-// ─────────────────────────────────────────────────────────────────────────────
-
 describe("§8.4 convention 24 h", () => {
   it('normalise "24:00" en "23:59"', () => {
     expect(parseOpeningHours("Mo 09:00-24:00")).toEqual([spec(["Monday"], "09:00", "23:59")]);
@@ -227,10 +206,6 @@ describe("§8.4 convention 24 h", () => {
     expect(parseOpeningHours("Mo-Su 00:00-24:00")).toEqual([spec(ALL_DAYS, "00:00", "23:59")]);
   });
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Erreurs
-// ─────────────────────────────────────────────────────────────────────────────
 
 describe("erreurs", () => {
   it("InvalidDayError et InvalidTimeError dérivent d'OpeningHoursError", () => {
@@ -287,10 +262,6 @@ describe("erreurs", () => {
     expect(() => parseOpeningHours("Mo 09:00-")).toThrow(InvalidTimeError);
   });
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
-// §2.4 — horaires exceptionnels
-// ─────────────────────────────────────────────────────────────────────────────
 
 describe("§2.4 horaires exceptionnels", () => {
   it("un jour fermé produit opens 00:00 / closes 00:00 sur un seul jour", () => {

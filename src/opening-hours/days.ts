@@ -1,11 +1,7 @@
 import type { DayOfWeekName } from "../types/output.js";
 import { InvalidDayError } from "./errors.js";
 
-/**
- * Les jours sont manipulés en interne par index **lundi = 0 → dimanche = 6**.
- * C'est l'ordre d'affichage attendu en sortie (§2.3), et ça rend le wrap-around
- * `"Fr-Mo"` trivial.
- */
+/** Jours dans l'ordre de sortie : lundi = 0, dimanche = 6. */
 export const DAY_NAMES: readonly DayOfWeekName[] = [
   "Monday",
   "Tuesday",
@@ -18,7 +14,6 @@ export const DAY_NAMES: readonly DayOfWeekName[] = [
 
 export const DAYS_IN_WEEK = 7;
 
-/** Jetons acceptés par le DSL, insensibles à la casse. */
 const DAY_TOKENS: Record<string, number> = {
   mo: 0,
   tu: 1,
@@ -29,7 +24,7 @@ const DAY_TOKENS: Record<string, number> = {
   su: 6,
 };
 
-const ACCEPTED = "Mo, Tu, We, Th, Fr, Sa, Su";
+const ACCEPTED_TOKENS = "Mo, Tu, We, Th, Fr, Sa, Su";
 
 /** Nom schema.org d'un index de jour. */
 export function dayName(index: number): DayOfWeekName {
@@ -40,12 +35,12 @@ export function dayName(index: number): DayOfWeekName {
   return name;
 }
 
-/** Traduit un jeton (`"Mo"`, `"mo"`) en index, ou lève une {@link InvalidDayError}. */
+/** Traduit un jeton (`"Mo"`, `"mo"`) en index de jour. */
 export function dayIndex(token: string, position: number): number {
   const index = DAY_TOKENS[token.toLowerCase()];
   if (index === undefined) {
     throw new InvalidDayError(
-      `Jour inconnu « ${token} » à la position ${position}. Jours acceptés : ${ACCEPTED}.`,
+      `Jour inconnu « ${token} » à la position ${position}. Jours acceptés : ${ACCEPTED_TOKENS}.`,
       token,
       position,
     );
@@ -53,22 +48,19 @@ export function dayIndex(token: string, position: number): number {
   return index;
 }
 
-/**
- * Développe une plage de jours, wrap-around compris : `"Fr-Mo"` donne
- * `{ 4, 5, 6, 0 }` (vendredi, samedi, dimanche, lundi).
- */
+/** Développe une plage de jours, wrap-around compris : `Fr-Mo` donne 4, 5, 6, 0. */
 export function expandDayRange(from: number, to: number): number[] {
   const days: number[] = [];
   let cursor = from;
   for (let step = 0; step < DAYS_IN_WEEK; step += 1) {
     days.push(cursor);
-    if (cursor === to) return days;
+    if (cursor === to) break;
     cursor = (cursor + 1) % DAYS_IN_WEEK;
   }
   return days;
 }
 
-/** Trie des index de jours et retourne les noms schema.org, lundi → dimanche. */
+/** Trie des index de jours et retourne leurs noms, lundi puis dimanche. */
 export function toDayNames(indices: Iterable<number>): DayOfWeekName[] {
   return [...new Set(indices)].sort((a, b) => a - b).map(dayName);
 }

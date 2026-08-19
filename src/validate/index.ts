@@ -1,24 +1,9 @@
-/**
- * Sous-export `local-business-jsonld/validate` : contrôle runtime d'un nœud ou
- * d'un graphe contre les règles *rich results* de Google.
- *
- * Deux niveaux, et la distinction compte :
- *
- * - **`errors`** — Google n'affichera pas de rich result. `name` et `address`
- *   sont obligatoires pour un `LocalBusiness`, point final.
- * - **`warnings`** — recommandé, ou piège connu. Le balisage reste valide, mais
- *   il performera moins bien, ou finira ignoré.
- *
- * Le validateur ne remplace pas le Rich Results Test de Google ni le Schema
- * Markup Validator : il attrape en CI ce qu'on ne veut pas découvrir en
- * production.
- */
-
 import {
   collectNestedIds,
   graphChildren,
   hasKey,
   isGraphDocument,
+  isPlainObject,
   readArray,
   readId,
   readNumber,
@@ -39,39 +24,37 @@ export interface ValidationIssue {
   severity: IssueSeverity;
   /** Chemin de la propriété visée, ex. `address.postalCode`. */
   property: string;
-  /** Message lisible, en français. */
   message: string;
-  /** `@id` du nœud concerné, quand il en a un. */
   nodeId?: string;
-  /** `@type` du nœud concerné. */
   nodeType?: string;
 }
 
 export interface ValidationResult {
-  /** `true` si aucune erreur — les avertissements ne bloquent rien. */
+  /** `true` si aucune erreur. Les avertissements ne bloquent rien. */
   valid: boolean;
   errors: ValidationIssue[];
   warnings: ValidationIssue[];
 }
 
 export interface ValidateOptions {
-  /**
-   * Langue des messages. `"fr"` est le seul catalogue à ce jour, et c'est la
-   * valeur par défaut.
-   */
+  /** `"fr"` est le seul catalogue, et la valeur par défaut. */
   locale?: "fr";
-  /**
-   * `@type` supplémentaires à traiter comme des établissements. Nécessaire pour
-   * les types passés par l'échappatoire, que l'union curée ne connaît pas.
-   */
+  /** `@type` supplémentaires à traiter comme des établissements. */
   businessTypes?: readonly string[];
 }
 
-const SCHEMA_CONTEXT = "https://schema.org";
-/** E.164 : un `+`, un indicatif qui ne commence pas par 0, 8 à 15 chiffres. */
-const E164 = /^\+[1-9]\d{7,14}$/;
+interface Finding {
+  code: IssueCode;
+  severity: IssueSeverity;
+  property: string;
+  detail?: string;
+}
 
-/** Propriétés recommandées par Google pour un `LocalBusiness`. */
+const SCHEMA_CONTEXT = "https://schema.org";
+const E164 = /^\+[1-9]\d{7,14}$/;
+const DEFAULT_BEST_RATING = 5;
+const DEFAULT_WORST_RATING = 1;
+
 const RECOMMENDED: readonly (readonly [property: string, code: IssueCode])[] = [
   ["image", "missing-image"],
   ["telephone", "missing-telephone"],
@@ -81,179 +64,139 @@ const RECOMMENDED: readonly (readonly [property: string, code: IssueCode])[] = [
   ["priceRange", "missing-price-range"],
 ];
 
-/** Composantes d'adresse dont l'absence dégrade le rattachement au lieu. */
 const ADDRESS_PARTS = ["streetAddress", "addressLocality", "postalCode", "addressCountry"];
 
-class IssueCollector {
-  private readonly issues: ValidationIssue[] = [];
-  private nodeId: string | undefined;
-  private nodeType: string | undefined;
-
-  focus(node: object): void {
-    this.nodeId = readId(node);
-    this.nodeType = readType(node);
-  }
-
-  add(severity: IssueSeverity, code: IssueCode, property: string, detail?: string): void {
-    this.issues.push({
-      code,
-      severity,
-      property,
-      message: MESSAGES_FR[code](detail),
-      nodeId: this.nodeId,
-      nodeType: this.nodeType,
-    });
-  }
-
-  error(code: IssueCode, property: string, detail?: string): void {
-    this.add("error", code, property, detail);
-  }
-
-  warn(code: IssueCode, property: string, detail?: string): void {
-    this.add("warning", code, property, detail);
-  }
-
-  result(): ValidationResult {
-    const errors = this.issues.filter((issue) => issue.severity === "error");
-    const warnings = this.issues.filter((issue) => issue.severity === "warning");
-    return { valid: errors.length === 0, errors, warnings };
-  }
+function error(code: IssueCode, property: string, detail?: string): Finding {
+  return { code, severity: "error", property, detail };
 }
 
-/** Contrôles applicables à n'importe quel nœud : identité et liaison. */
-function checkIdentity(node: object, collector: IssueCollector): void {
+function warning(code: IssueCode, property: string, detail?: string): Finding {
+  return { code, severity: "warning", property, detail };
+}
+
+function checkIdentity(node: object): Finding[] {
   const id = readId(node);
-  if (id === undefined) {
-    collector.warn("missing-id", "@id");
-  } else if (!id.includes("#")) {
-    collector.warn("id-without-fragment", "@id", id);
-  }
+  if (id === undefined) return [warning("missing-id", "@id")];
+  if (!id.includes("#")) return [warning("id-without-fragment", "@id", id)];
+  return [];
 }
 
-function checkAddress(node: object, collector: IssueCollector): void {
+function checkAddress(node: object): Finding[] {
   const address = readObject(node, "address");
-  if (address === undefined) {
-    collector.error("missing-address", "address");
-    return;
-  }
-  for (const part of ADDRESS_PARTS) {
-    if (readString(address, part) === undefined) {
-      collector.warn("incomplete-address", `address.${part}`, part);
-    }
-  }
+  if (address === undefined) return [error("missing-address", "address")];
+
+  return ADDRESS_PARTS.filter((part) => readString(address, part) === undefined).map((part) =>
+    warning("incomplete-address", `address.${part}`, part),
+  );
 }
 
-function checkRating(node: object, collector: IssueCollector): void {
+function checkRating(node: object): Finding[] {
   const rating = readObject(node, "aggregateRating");
   const hasReviews = readArray(node, "review") !== undefined;
+  if (rating === undefined && !hasReviews) return [];
 
-  if (rating === undefined && !hasReviews) return;
-
-  // Toujours, même quand tout est bien formé : c'est une règle éditoriale de
-  // Google, pas une erreur de balisage (§8.3).
-  collector.warn("self-declared-rating", rating === undefined ? "review" : "aggregateRating");
-
-  if (rating === undefined) return;
+  const findings = [
+    warning("self-declared-rating", rating === undefined ? "review" : "aggregateRating"),
+  ];
+  if (rating === undefined) return findings;
 
   const value = readNumber(rating, "ratingValue");
-  const best = readNumber(rating, "bestRating") ?? 5;
-  const worst = readNumber(rating, "worstRating") ?? 1;
+  const best = readNumber(rating, "bestRating") ?? DEFAULT_BEST_RATING;
+  const worst = readNumber(rating, "worstRating") ?? DEFAULT_WORST_RATING;
 
   if (value === undefined || value < worst || value > best) {
-    collector.error(
-      "rating-out-of-range",
-      "aggregateRating.ratingValue",
-      `${String(value)} hors de ${worst}–${best}`,
+    findings.push(
+      error(
+        "rating-out-of-range",
+        "aggregateRating.ratingValue",
+        `${String(value)} hors de ${worst}–${best}`,
+      ),
     );
   }
 
   const count = readNumber(rating, "reviewCount") ?? readNumber(rating, "ratingCount");
   if (count === undefined || count <= 0) {
-    collector.error("rating-count-invalid", "aggregateRating.reviewCount", String(count));
+    findings.push(error("rating-count-invalid", "aggregateRating.reviewCount", String(count)));
   }
+
+  return findings;
 }
 
-function checkOpeningHours(node: object, collector: IssueCollector): void {
-  for (const entry of readArray(node, "openingHoursSpecification") ?? []) {
-    if (typeof entry !== "object" || entry === null) continue;
-    if (readString(entry, "closes") === "24:00") {
-      collector.warn("closes-at-24", "openingHoursSpecification.closes");
-      return;
-    }
-  }
+function checkOpeningHours(node: object): Finding[] {
+  const specs = readArray(node, "openingHoursSpecification") ?? [];
+  const closesAtMidnight = specs.some(
+    (spec) => isPlainObject(spec) && readString(spec, "closes") === "24:00",
+  );
+
+  return closesAtMidnight ? [warning("closes-at-24", "openingHoursSpecification.closes")] : [];
 }
 
-/** Règles propres au `LocalBusiness` : obligatoires, recommandées, pièges. */
-function checkBusiness(node: object, collector: IssueCollector): void {
+function checkBusiness(node: object): Finding[] {
+  const findings: Finding[] = [];
+
   if (readString(node, "name") === undefined) {
-    collector.error("missing-name", "name");
+    findings.push(error("missing-name", "name"));
   }
 
-  checkAddress(node, collector);
+  findings.push(...checkAddress(node));
 
   for (const [property, code] of RECOMMENDED) {
-    if (!hasKey(node, property)) collector.warn(code, property);
+    if (!hasKey(node, property)) findings.push(warning(code, property));
   }
 
   const telephone = readString(node, "telephone");
   if (telephone !== undefined && !E164.test(telephone)) {
-    collector.warn("telephone-not-e164", "telephone", telephone);
+    findings.push(warning("telephone-not-e164", "telephone", telephone));
   }
 
-  checkRating(node, collector);
-  checkOpeningHours(node, collector);
+  findings.push(...checkRating(node), ...checkOpeningHours(node));
+  return findings;
+}
+
+function checkReferences(node: object, declaredIds: ReadonlySet<string>): Finding[] {
+  return [...collectNestedIds(node)]
+    .filter((reference) => !declaredIds.has(reference))
+    .map((reference) => warning("dangling-reference", "@id", reference));
+}
+
+function toIssue(finding: Finding, node: object): ValidationIssue {
+  return {
+    code: finding.code,
+    severity: finding.severity,
+    property: finding.property,
+    message: MESSAGES_FR[finding.code](finding.detail),
+    nodeId: readId(node),
+    nodeType: readType(node),
+  };
 }
 
 /**
- * Contrôle un nœud ou un graphe.
- *
- * ```ts
- * const { valid, errors, warnings } = validate(jsonLd);
- * if (!valid) throw new Error(errors.map((issue) => issue.message).join("\n"));
- * ```
- *
- * Les règles `LocalBusiness` s'appliquent aux nœuds dont le `@type` appartient à
- * l'union curée ; les autres ne reçoivent que les contrôles d'identité. Pour un
- * `@type` passé par l'échappatoire, l'annoncer via `businessTypes`.
+ * Contrôle un nœud ou un graphe contre les règles rich results de Google. Les
+ * règles `LocalBusiness` ne s'appliquent qu'aux `@type` connus ou annoncés.
  */
 export function validate(data: object, options: ValidateOptions = {}): ValidationResult {
-  const collector = new IssueCollector();
-  const businessTypes = new Set<string>([
-    ...LOCAL_BUSINESS_TYPES,
-    ...(options.businessTypes ?? []),
-  ]);
-
+  const businessTypes = new Set([...LOCAL_BUSINESS_TYPES, ...(options.businessTypes ?? [])]);
   const isGraph = isGraphDocument(data);
   const nodes = isGraph ? graphChildren(data) : [data];
 
-  collector.focus(data);
+  const issues: ValidationIssue[] = [];
+
   if (readString(data, "@context") !== SCHEMA_CONTEXT) {
-    collector.error("missing-context", "@context");
+    issues.push(toIssue(error("missing-context", "@context"), data));
   }
 
-  const declaredIds = new Set<string>();
-  for (const node of nodes) {
-    const id = readId(node);
-    if (id !== undefined) declaredIds.add(id);
-  }
+  const declaredIds = new Set(nodes.map(readId).filter((id): id is string => id !== undefined));
 
   for (const node of nodes) {
-    collector.focus(node);
-    checkIdentity(node, collector);
-
-    if (businessTypes.has(readType(node) ?? "")) {
-      checkBusiness(node, collector);
-    }
-
-    // Une référence pendante n'a de sens qu'à l'échelle d'un graphe : un nœud
-    // seul ne peut évidemment pas contenir ses propres cibles.
-    if (!isGraph) continue;
-    for (const reference of collectNestedIds(node)) {
-      if (!declaredIds.has(reference)) {
-        collector.warn("dangling-reference", "@id", reference);
-      }
-    }
+    const findings = [
+      ...checkIdentity(node),
+      ...(businessTypes.has(readType(node) ?? "") ? checkBusiness(node) : []),
+      ...(isGraph ? checkReferences(node, declaredIds) : []),
+    ];
+    issues.push(...findings.map((finding) => toIssue(finding, node)));
   }
 
-  return collector.result();
+  const errors = issues.filter((issue) => issue.severity === "error");
+  const warnings = issues.filter((issue) => issue.severity === "warning");
+  return { valid: errors.length === 0, errors, warnings };
 }

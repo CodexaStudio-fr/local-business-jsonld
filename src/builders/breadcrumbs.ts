@@ -4,19 +4,7 @@ import type { BreadcrumbInput, NodeOptions } from "../types/input.js";
 import type { BreadcrumbListNode, ListItemNode, WithContext } from "../types/output.js";
 import { withContext } from "./shared.js";
 
-/**
- * Construit le fil d'Ariane.
- *
- * ```ts
- * breadcrumbs([
- *   { name: "Accueil", url: "https://x.fr" },
- *   { name: "Services", url: "https://x.fr/services" },
- *   { name: "Dépannage" }, // page courante : `url` peut être omise
- * ]);
- * ```
- *
- * @throws {TypeError} liste vide — `itemListElement` est obligatoire
- */
+/** Construit le fil d'Ariane. Les positions sont numérotées à partir de 1. */
 export function breadcrumbs(
   items: readonly BreadcrumbInput[],
   options: NodeOptions = {},

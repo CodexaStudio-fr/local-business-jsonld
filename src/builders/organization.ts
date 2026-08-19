@@ -17,11 +17,8 @@ import {
 const ID_FRAGMENT = "organization";
 
 /**
- * Construit le nœud `Organization` — la maison mère d'un réseau, ou l'éditeur
- * d'un site qui n'est pas lui-même un établissement.
- *
- * Pour un établissement physique, préférer `localBusiness()` : il porte
- * l'adresse, les horaires et la géolocalisation.
+ * Construit le nœud `Organization` : maison mère, ou éditeur d'un site. Pour un
+ * lieu physique, préférer `localBusiness()`.
  */
 export function organization<T extends string = "Organization">(
   input: OrganizationInput = {},
@@ -30,12 +27,8 @@ export function organization<T extends string = "Organization">(
   const { baseUrl } = options;
   const defaultCountry = options.defaultCountry ?? DEFAULT_COUNTRY;
 
-  // Cast justifié : `T` vaut "Organization" par défaut, exactement la valeur de
-  // repli utilisée quand `input.type` est absent.
-  const type = (input.type ?? "Organization") as T;
-
   const node: OrganizationNode<T> = {
-    "@type": type,
+    "@type": (input.type ?? "Organization") as T,
     "@id":
       input.id === undefined ? undefined : withFragment(resolveUrl(input.id, baseUrl), ID_FRAGMENT),
     name: input.name,

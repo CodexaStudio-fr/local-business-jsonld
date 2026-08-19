@@ -15,10 +15,6 @@ const ID_FRAGMENT = "service";
 const DEFAULT_CURRENCY = "EUR";
 const SCHEMA_PREFIX = "https://schema.org/";
 
-/**
- * `"InStock"` devient `"https://schema.org/InStock"` : `ItemAvailability` est une
- * énumération, dont les membres sont des URIs. Une valeur déjà absolue passe.
- */
 function isAvailabilityUrl(
   value: ItemAvailabilityName | ItemAvailabilityUrl,
 ): value is ItemAvailabilityUrl {
@@ -40,38 +36,21 @@ function buildOffer(input: OfferInput, baseUrl: string | undefined): OfferNode {
     name: input.name,
     description: input.description,
     price,
-    // Une devise sans prix ne veut rien dire ; un prix sans devise est ambigu.
     priceCurrency: price === undefined ? undefined : (input.priceCurrency ?? DEFAULT_CURRENCY),
     url: input.url === undefined ? undefined : resolveUrl(input.url, baseUrl),
     availability: buildAvailability(input.availability),
   };
 }
 
-/**
- * Construit le nœud `Service` — une prestation rattachée à l'établissement.
- *
- * ```ts
- * service({
- *   id: "#depannage",
- *   name: "Dépannage plomberie 7j/7",
- *   provider: "#business",
- *   areaServed: ["Le Mans", "Sarthe"],
- *   offers: [{ name: "Déplacement", price: 60 }],
- * });
- * ```
- */
+/** Construit le nœud `Service` : une prestation rattachée à l'établissement. */
 export function service<T extends string = "Service">(
   input: ServiceInput = {},
   options: BuilderOptions = {},
 ): WithContext<ServiceNode<T>> {
   const { baseUrl } = options;
 
-  // Cast justifié : `T` vaut "Service" par défaut, exactement la valeur de repli
-  // utilisée quand `input.type` est absent.
-  const type = (input.type ?? "Service") as T;
-
   const node: ServiceNode<T> = {
-    "@type": type,
+    "@type": (input.type ?? "Service") as T,
     "@id":
       input.id === undefined ? undefined : withFragment(resolveUrl(input.id, baseUrl), ID_FRAGMENT),
     name: input.name,

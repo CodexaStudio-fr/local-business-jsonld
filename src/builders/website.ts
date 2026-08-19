@@ -24,20 +24,11 @@ function buildSearchAction(
   return {
     "@type": "SearchAction",
     target: { "@type": "EntryPoint", urlTemplate: resolveUrl(urlTemplate, baseUrl) },
-    // Forme documentée par Google pour la sitelinks searchbox.
     "query-input": `required name=${queryName}`,
   };
 }
 
-/**
- * Construit le nœud `WebSite`, à relier au `LocalBusiness` via `publisher`.
- *
- * ```ts
- * website({ id: "#website", url: "https://x.fr", publisher: "#business" });
- * ```
- *
- * @throws {TypeError} gabarit de `searchAction` sans variable de requête
- */
+/** Construit le nœud `WebSite`, à relier au `LocalBusiness` via `publisher`. */
 export function website(
   input: WebSiteInput = {},
   options: BuilderOptions = {},
@@ -45,16 +36,14 @@ export function website(
   const { baseUrl } = options;
   const url = input.url === undefined ? undefined : resolveUrl(input.url, baseUrl);
 
-  const id =
-    input.id !== undefined
-      ? withFragment(resolveUrl(input.id, baseUrl), ID_FRAGMENT)
-      : url !== undefined
-        ? withFragment(canonicalizeUrl(url), ID_FRAGMENT)
-        : undefined;
-
   const node: WebSiteNode = {
     "@type": "WebSite",
-    "@id": id,
+    "@id":
+      input.id !== undefined
+        ? withFragment(resolveUrl(input.id, baseUrl), ID_FRAGMENT)
+        : url !== undefined
+          ? withFragment(canonicalizeUrl(url), ID_FRAGMENT)
+          : undefined,
     url,
     name: input.name,
     alternateName: input.alternateName,

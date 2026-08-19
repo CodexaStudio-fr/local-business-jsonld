@@ -1,34 +1,25 @@
-/**
- * Types d'entrée : l'API ergonomique. Noms courts, unités évidentes, pas de
- * `@type` à écrire à la main. Tout est optionnel sauf ce qui casserait la sortie.
- */
-
 import type { AnyLocalBusinessType } from "./business-types.js";
 import type { ItemAvailabilityName, ItemAvailabilityUrl } from "./output.js";
 
 /** Référence à un autre nœud : `"#business"`, une URL absolue, ou `{ "@id": … }`. */
 export type Ref = string | { "@id": string };
 
-/**
- * Une valeur ou une liste de valeurs. La liste est `readonly` : les objets de
- * configuration figés par `as const` doivent passer sans copie manuelle.
- */
+/** Une valeur, ou une liste de valeurs. */
 export type OneOrMany<T> = T | readonly T[];
 
 export interface AddressInput {
-  /** Numéro et rue. → `streetAddress` */
+  /** Numéro et rue. */
   street?: string;
-  /** Complément d'adresse (bâtiment, étage). Concaténé à `street`. */
+  /** Complément d'adresse. Concaténé à `street`. */
   street2?: string;
-  /** Boîte postale. → `postOfficeBoxNumber` */
+  /** Boîte postale. */
   poBox?: string;
-  /** Commune. → `addressLocality` */
+  /** Commune. */
   city?: string;
-  /** Région ou département. → `addressRegion` */
+  /** Région ou département. */
   region?: string;
-  /** Code postal. → `postalCode` */
   postalCode?: string;
-  /** Code pays ISO 3166-1 alpha-2. Défaut : `"FR"`. → `addressCountry` */
+  /** Code pays ISO 3166-1 alpha-2. Défaut : `"FR"`. */
   country?: string;
 }
 
@@ -41,24 +32,17 @@ export interface GeoInput {
 
 export interface ImageInput {
   url: string;
-  /** Légende. Les dimensions ne sont pas exposées : voir `ImageObjectNode`. */
   caption?: string;
 }
 
-/**
- * Horaire exceptionnel : soit un jour unique (`date`), soit une période
- * (`from` / `to`). Dates en `YYYY-MM-DD`.
- */
+/** Un jour unique (`date`), ou une période (`from`/`to`). Dates en `YYYY-MM-DD`. */
 export interface SpecialHoursInput {
-  /** Jour unique. Exclusif avec `from`/`to`. */
   date?: string;
-  /** Début de période (inclus). */
   from?: string;
-  /** Fin de période (incluse). */
   to?: string;
-  /** `true` → fermé sur toute la période. */
+  /** Fermé sur toute la période. Exclut `opens`/`closes`. */
   closed?: boolean;
-  /** Heure d'ouverture `HH:MM` si ouvert avec des horaires spéciaux. */
+  /** Heure d'ouverture `HH:MM`. */
   opens?: string;
   /** Heure de fermeture `HH:MM`. */
   closes?: string;
@@ -69,9 +53,9 @@ export interface AggregateRatingInput {
   value: number;
   /** Nombre d'avis. */
   count: number;
-  /** Note maximale de l'échelle. Défaut : `5`. */
+  /** Haut de l'échelle. Défaut : `5`. */
   best?: number;
-  /** Note minimale de l'échelle. Défaut : `1`. */
+  /** Bas de l'échelle. Défaut : `1`. */
   worst?: number;
 }
 
@@ -85,9 +69,8 @@ export interface PersonInput {
 }
 
 export interface ReviewInput {
-  /** Auteur de l'avis : nom, objet `PersonInput`, ou référence à un nœud. */
+  /** Nom de l'auteur, objet `PersonInput`, ou référence à un nœud. */
   author: string | PersonInput | Ref;
-  /** Note attribuée. */
   rating: number;
   /** Corps de l'avis. */
   body?: string;
@@ -95,39 +78,29 @@ export interface ReviewInput {
   title?: string;
   /** Date de publication `YYYY-MM-DD`. */
   datePublished?: string;
-  /** Échelle : note maximale. Défaut : `5`. */
   best?: number;
-  /** Échelle : note minimale. Défaut : `1`. */
   worst?: number;
-  /** Nœud noté (par défaut, laissé au graphe). */
+  /** Nœud noté. */
   itemReviewed?: Ref;
   id?: string;
 }
 
-/** Options communes aux builders. */
 export interface BuilderOptions {
-  /** Code pays par défaut de l'adresse. Défaut : `"FR"`. */
+  /** Code pays appliqué à une adresse qui n'en précise pas. Défaut : `"FR"`. */
   defaultCountry?: string;
-  /**
-   * Base servant à résoudre les `@id` et URLs relatifs.
-   * `graph()` peut aussi la fournir globalement.
-   */
+  /** Base servant à résoudre les `@id` et URLs relatifs. */
   baseUrl?: string;
 }
 
 /** Options des builders dont l'`@id` n'est pas déduit d'une URL. */
 export interface NodeOptions extends BuilderOptions {
-  /** Identifiant du nœud, pour le référencer depuis le graphe. */
   id?: string;
 }
 
 export interface LocalBusinessInput<T extends AnyLocalBusinessType = AnyLocalBusinessType> {
   /** Sous-type schema.org. Défaut : `"LocalBusiness"`. */
   type?: T;
-  /**
-   * Identifiant du nœud. **Doit porter un fragment** (`#business`) pour être
-   * référençable depuis les autres nœuds du graphe.
-   */
+  /** Identifiant du nœud. Le fragment `#business` est ajouté s'il manque. */
   id?: string;
   name?: string;
   legalName?: string;
@@ -135,46 +108,43 @@ export interface LocalBusinessInput<T extends AnyLocalBusinessType = AnyLocalBus
   description?: string;
   slogan?: string;
   url?: string;
-  /** Téléphone au format E.164 (`+33243123456`) ou national avec `defaultCountry`. */
+  /** E.164 (`+33243123456`), ou format national avec `defaultCountry`. */
   telephone?: string;
   faxNumber?: string;
   email?: string;
-  /** Fourchette de prix, ex. `"€€"` ou `"10-50 €"`. */
+  /** Fourchette de prix, ex. `"€€"`. */
   priceRange?: string;
   /** Devise ISO 4217, ex. `"EUR"`. */
   currenciesAccepted?: string;
   /** Moyens de paiement. Une liste est jointe par `", "`. */
   paymentAccepted?: OneOrMany<string>;
-  /** Images. Google recommande trois ratios : 1:1, 4:3, 16:9. */
+  /** Google recommande trois ratios : 1:1, 4:3, 16:9. */
   image?: OneOrMany<string | ImageInput>;
   logo?: string | ImageInput;
   address?: AddressInput;
   geo?: GeoInput;
-  /** Lien Google Maps / plan. */
+  /** Lien Google Maps ou plan. */
   hasMap?: string;
-  /** Zones desservies (communes, départements, régions). */
+  /** Zones desservies : communes, départements, régions. */
   areaServed?: OneOrMany<string>;
-  /** Langues parlées, codes BCP 47 (`"fr"`, `"en"`). */
+  /** Langues parlées, codes BCP 47. */
   knowsLanguage?: OneOrMany<string>;
   /** DSL d'horaires, ex. `"Mo-Fr 08:00-12:00,14:00-18:00; Sa 09:00-12:00"`. */
   openingHours?: string | readonly string[];
   /** Fermetures et horaires exceptionnels. */
   specialOpeningHours?: readonly SpecialHoursInput[];
-  /** Profils externes : réseaux sociaux, fiche Google, annuaires. */
+  /** Réseaux sociaux, fiche Google, annuaires. */
   sameAs?: OneOrMany<string>;
-  /**
-   * ⚠️ Google ignore — voire pénalise — les avis auto-déclarés affichés par
-   * l'entreprise sur sa propre page. Ne renseigner qu'avec une source vérifiable.
-   */
+  /** Sans source vérifiable, Google ignore les avis auto-déclarés. */
   aggregateRating?: AggregateRatingInput;
-  /** Avis individuels. Même réserve que `aggregateRating`. */
+  /** Même réserve que `aggregateRating`. */
   review?: readonly ReviewInput[];
   founder?: string | PersonInput | Ref;
-  /** Année ou date de création (`"1998"` ou `"1998-04-12"`). */
+  /** Année ou date de création. */
   foundingDate?: string;
-  /** Numéro de TVA intracommunautaire. */
+  /** TVA intracommunautaire. */
   vatID?: string;
-  /** Identifiant fiscal (SIRET, SIREN…). */
+  /** Identifiant fiscal, SIRET ou SIREN. */
   taxID?: string;
   /** Maison mère, pour les réseaux multi-établissements. */
   parentOrganization?: Ref;
@@ -202,7 +172,7 @@ export interface OrganizationInput {
 }
 
 export interface SearchActionInput {
-  /** Gabarit d'URL contenant `{search_term_string}`. */
+  /** Gabarit d'URL contenant la variable de requête. */
   urlTemplate: string;
   /** Nom de la variable. Défaut : `"search_term_string"`. */
   queryName?: string;
@@ -216,33 +186,32 @@ export interface WebSiteInput {
   description?: string;
   /** Code BCP 47, ex. `"fr-FR"`. */
   inLanguage?: string;
-  /** Éditeur du site : référence vers le nœud `LocalBusiness`/`Organization`. */
+  /** Référence vers le nœud `LocalBusiness` ou `Organization`. */
   publisher?: Ref;
-  /** Sitelinks searchbox. Accepte le gabarit d'URL directement. */
+  /** Sitelinks searchbox. Le gabarit d'URL suffit. */
   searchAction?: string | SearchActionInput;
 }
 
 export interface BreadcrumbInput {
   name: string;
-  /** URL de l'étape. Omise sur la dernière étape (page courante). */
+  /** Omise sur la dernière étape, la page courante. */
   url?: string;
 }
 
 export interface FaqInput {
   question: string;
-  /** Réponse. Le HTML simple est autorisé par Google. */
+  /** Le HTML simple est autorisé par Google. */
   answer: string;
 }
 
 export interface OfferInput {
   name?: string;
   description?: string;
-  /** Prix, ex. `"90.00"`. */
   price?: string | number;
   /** Devise ISO 4217. Défaut : `"EUR"`. */
   priceCurrency?: string;
   url?: string;
-  /** Disponibilité : nom court (`"InStock"`) ou URI schema.org complète. */
+  /** Nom court (`"InStock"`) ou URI schema.org complète. */
   availability?: ItemAvailabilityName | ItemAvailabilityUrl;
 }
 
@@ -254,17 +223,13 @@ export interface ServiceInput {
   description?: string;
   serviceType?: string;
   url?: string;
-  /** Prestataire : référence vers le nœud `LocalBusiness`. */
+  /** Référence vers le nœud du prestataire. */
   provider?: Ref;
   areaServed?: OneOrMany<string>;
   offers?: readonly OfferInput[];
 }
 
-/** Options de `graph()`. */
 export interface GraphOptions {
-  /**
-   * Base absolue utilisée pour résoudre les `@id` et références relatifs
-   * (`"#business"` → `"https://exemple.fr/#business"`).
-   */
+  /** Base absolue pour résoudre les `@id` et URLs relatifs. */
   baseUrl?: string;
 }

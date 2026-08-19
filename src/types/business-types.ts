@@ -1,16 +1,10 @@
 /**
- * Union curée des `@type` schema.org dérivés de `LocalBusiness`, choisis pour
- * couvrir l'artisanat et les PME françaises. Volontairement **non exhaustive** :
- * l'échappatoire {@link AnyLocalBusinessType} couvre le reste du vocabulaire.
- *
- * Chaque valeur de cette union est un sous-type réel de `LocalBusiness` — le test
- * de types `test/types.test-d.ts` le vérifie contre `schema-dts`.
+ * Sous-types `LocalBusiness` couverts par l'autocomplétion. Non exhaustif :
+ * {@link AnyLocalBusinessType} accepte le reste du vocabulaire schema.org.
  */
 export type LocalBusinessType =
   /** Générique, à utiliser quand aucun sous-type ne correspond. */
   | "LocalBusiness"
-
-  // ── Bâtiment, artisanat, dépannage ────────────────────────────────────────
   /** Entreprise du bâtiment ou de l'habitat, générique. */
   | "HomeAndConstructionBusiness"
   /** Plombier, chauffagiste sanitaire. */
@@ -29,8 +23,6 @@ export type LocalBusinessType =
   | "Locksmith"
   /** Déménageur. */
   | "MovingCompany"
-
-  // ── Automobile ────────────────────────────────────────────────────────────
   /** Activité automobile, générique. */
   | "AutomotiveBusiness"
   /** Garage, réparation automobile. */
@@ -41,8 +33,6 @@ export type LocalBusinessType =
   | "AutoWash"
   /** Station-service. */
   | "GasStation"
-
-  // ── Santé, beauté, bien-être ──────────────────────────────────────────────
   /** Santé et beauté, générique. */
   | "HealthAndBeautyBusiness"
   /** Salon de coiffure. */
@@ -65,11 +55,6 @@ export type LocalBusinessType =
   | "Pharmacy"
   /** Cabinet médical, centre de santé. */
   | "MedicalClinic"
-  // Pas de vétérinaire ici : schema.org place `VeterinaryCare` sous
-  // `MedicalOrganization`, pas sous `LocalBusiness`. L'échappatoire
-  // {@link AnyLocalBusinessType} l'accepte quand même à l'exécution.
-
-  // ── Restauration, alimentation ────────────────────────────────────────────
   /** Établissement de restauration, générique. */
   | "FoodEstablishment"
   /** Restaurant. */
@@ -86,8 +71,6 @@ export type LocalBusinessType =
   | "IceCreamShop"
   /** Domaine viticole, cave. */
   | "Winery"
-
-  // ── Services professionnels ───────────────────────────────────────────────
   /** Service professionnel, générique. */
   | "ProfessionalService"
   /** Service juridique, générique. */
@@ -104,8 +87,6 @@ export type LocalBusinessType =
   | "RealEstateAgent"
   /** Agence de voyage. */
   | "TravelAgency"
-
-  // ── Commerce de détail ────────────────────────────────────────────────────
   /** Commerce, générique. */
   | "Store"
   /** Prêt-à-porter. */
@@ -120,24 +101,18 @@ export type LocalBusinessType =
   | "GardenStore"
   /** Épicerie, supermarché. */
   | "GroceryStore"
-
-  // ── Sport et loisirs ──────────────────────────────────────────────────────
   /** Lieu d'activité sportive, générique. */
   | "SportsActivityLocation"
   /** Salle de sport. */
   | "ExerciseGym"
   /** Club de remise en forme. */
   | "HealthClub"
-
-  // ── Hébergement ───────────────────────────────────────────────────────────
   /** Hébergement, générique. */
   | "LodgingBusiness"
   /** Hôtel. */
   | "Hotel"
   /** Chambre d'hôtes, gîte. */
   | "BedAndBreakfast"
-
-  // ── Divers ────────────────────────────────────────────────────────────────
   /** Crèche, garde d'enfants. */
   | "ChildCare"
   /** Pressing, blanchisserie. */
@@ -145,22 +120,10 @@ export type LocalBusinessType =
   /** Garde-meubles, self-stockage. */
   | "SelfStorage";
 
-/**
- * {@link LocalBusinessType} plus l'échappatoire : n'importe quel `@type`
- * schema.org sous `LocalBusiness` reste acceptable, sans perdre l'autocomplétion
- * sur l'union curée (astuce `string & {}`).
- */
+/** {@link LocalBusinessType} plus n'importe quel autre `@type` schema.org. */
 export type AnyLocalBusinessType = LocalBusinessType | (string & {});
 
-/**
- * La même liste, disponible à l'exécution — `validate()` a besoin de savoir
- * quels `@type` relèvent des règles LocalBusiness de Google.
- *
-
- * C'est le seul code exécutable de `src/types/`. L'annotation interdit qu'un type
- * étranger à l'union s'y glisse, et `test/business-types.test.ts` vérifie
- * l'inverse — que l'union ne contient rien qui manque au tableau.
- */
+/** La même liste à l'exécution, pour `validate()`. */
 export const LOCAL_BUSINESS_TYPES: readonly LocalBusinessType[] = [
   "LocalBusiness",
   "HomeAndConstructionBusiness",

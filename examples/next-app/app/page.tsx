@@ -45,11 +45,6 @@ export default function Page() {
         ))}
       </dl>
 
-      {/*
-        Panneau de contrôle : ce que `validate()` dit du balisage de cette page.
-        En vrai projet, ce contrôle vit dans un test, pas dans la page — il est
-        ici pour rendre l'exemple auto-démonstratif.
-      */}
       <h2>Contrôle du balisage</h2>
       <p>
         <strong>{report.valid ? "Valide" : "Invalide"}</strong> — {report.errors.length} erreur(s),{" "}

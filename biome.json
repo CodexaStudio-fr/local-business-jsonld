@@ -40,6 +40,14 @@
           "correctness": { "noNodejsModules": "error" }
         }
       }
+    },
+    {
+      "includes": ["src/next/**"],
+      "linter": {
+        "rules": {
+          "security": { "noDangerouslySetInnerHtml": "off" }
+        }
+      }
     }
   ]
 }

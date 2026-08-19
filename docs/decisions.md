@@ -102,3 +102,40 @@ trois leviers si la taille devient un sujet :
 2. Compacter `DIAL_CODES` en une chaîne parsée à la demande (~150 B).
 3. Sortir `parseOpeningHours` du chemin de `localBusiness` — mais c'est
    l'argument principal du paquet, donc non.
+
+## Où vivent les `as`, et pourquoi
+
+Le code ne porte pas de commentaire explicatif : les justifications sont ici.
+Trois endroits, et trois seulement, utilisent une assertion de type.
+
+**`src/internal/`** — `nodes.ts` et `prune.ts` traitent un nœud comme un sac de
+clés (`Record<string, unknown>`) pour l'élaguer, l'ordonner, y résoudre les `@id`.
+Aucune de ces opérations ne change la forme du nœud : elles retirent des clés
+optionnelles et remplacent des `string` par des `string`. Confiner ces casts ici
+permet à `builders/graph.ts` et `validate/` de rester typés de bout en bout.
+`values.ts` en porte deux autres, parce que `Array.isArray` ne restreint pas un
+`readonly T[]` dans une union générique — le test, lui, est correct à
+l'exécution.
+
+**Le repli de `@type` dans les builders génériques** — `localBusiness`,
+`organization` et `service` s'écrivent
+`(input.type ?? "LocalBusiness") as T`. Le paramètre `T` a précisément
+`"LocalBusiness"` pour valeur par défaut, donc le cast affirme ce que la
+signature garantit déjà. TypeScript ne sait pas relier les deux.
+
+**Le retour de `graph()`** — les enfants sont manipulés en `Record<string,
+unknown>` puis annoncés comme `GraphChild[]`. C'est vrai par construction : ils
+viennent tous d'un builder, donc portent un `@type`. `GraphChild` ne promet rien
+de plus, justement parce que la fusion des `@id` efface les types précis.
+
+## Les suppressions de lint vivent dans `biome.json`
+
+`<JsonLd>` a besoin de `dangerouslySetInnerHTML` : c'est le seul moyen d'écrire
+du JSON brut dans un `<script>`, React échapperait un enfant texte en entités
+HTML qu'aucun parseur JSON-LD ne relit. L'inertie du contenu vient de
+`serialize()`, et `test/next.test.tsx` le vérifie en injectant
+`</script><script>alert(1)</script>` dans un `name`.
+
+La règle `security/noDangerouslySetInnerHtml` est donc désactivée pour
+`src/next/**` dans `biome.json`, plutôt que suppressed par un `biome-ignore` au
+fil du code.

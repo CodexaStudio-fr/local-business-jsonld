@@ -1,13 +1,6 @@
-/**
- * Types de sortie : une modélisation **minimale** des nœuds schema.org que ce
- * package produit. Volontairement plus étroite que `schema-dts` (dont les types
- * sont énormes et plombent le `tsc` des consommateurs), mais assignable à
- * `WithContext<LocalBusiness>` — vérifié dans `test/types.test-d.ts`.
- */
-
 import type { AnyLocalBusinessType } from "./business-types.js";
 
-/** Le seul `@context` que ce package émet. */
+/** Le seul `@context` émis. */
 export type SchemaContext = "https://schema.org";
 
 /** Référence à un autre nœud du graphe. */
@@ -18,13 +11,10 @@ export interface IdRef {
 /** Ajoute le `@context` racine à un nœud. */
 export type WithContext<T> = T & { "@context": SchemaContext };
 
-/**
- * Retire le `@context` d'un noeud (les enfants d'un `@graph` n'en portent pas).
- * Distributif : appliqué a une union, il conserve l'union.
- */
+/** Retire le `@context` d'un nœud. Distributif sur une union. */
 export type Contextless<T> = T extends unknown ? Omit<T, "@context"> : never;
 
-/** Noms de jours schema.org, forme courte (celle utilisée par la doc Google). */
+/** Noms de jours schema.org, forme courte. */
 export type DayOfWeekName =
   | "Monday"
   | "Tuesday"
@@ -35,7 +25,7 @@ export type DayOfWeekName =
   | "Sunday"
   | "PublicHolidays";
 
-/** Créneau d'ouverture. Heures en `HH:MM`, heure **locale** de l'établissement. */
+/** Créneau d'ouverture. Heures en `HH:MM`, heure locale de l'établissement. */
 export interface OpeningHoursSpecificationNode {
   "@type": "OpeningHoursSpecification";
   dayOfWeek?: DayOfWeekName[];
@@ -61,12 +51,6 @@ export interface GeoCoordinatesNode {
   longitude: number;
 }
 
-/**
- * `width` et `height` sont volontairement absents : schema.org les type en
- * `Distance | QuantitativeValue`, pas en nombre, et Google n'en a pas besoin
- * pour les rich results d'un LocalBusiness. Émettre `"width": 1200` produirait
- * un avertissement du Schema Markup Validator.
- */
 export interface ImageObjectNode {
   "@type": "ImageObject";
   url: string;
@@ -131,11 +115,7 @@ export interface OrganizationNode<T extends string = "Organization"> {
   parentOrganization?: IdRef;
 }
 
-/**
- * Corps d'un nœud `LocalBusiness` (sans `@context`). Le paramètre `T` porte le
- * `@type` littéral pour que la sortie reste assignable au sous-type précis de
- * `schema-dts` (`Plumber`, `Restaurant`, …).
- */
+/** Corps d'un nœud `LocalBusiness`, sans `@context`. */
 export interface LocalBusinessNode<T extends string = AnyLocalBusinessType> {
   "@type": T;
   "@id"?: string;
@@ -178,7 +158,6 @@ export interface EntryPointNode {
 export interface SearchActionNode {
   "@type": "SearchAction";
   target: EntryPointNode;
-  /** Nom de la variable substituée dans `urlTemplate`. */
   "query-input": string;
 }
 
@@ -224,7 +203,7 @@ export interface FAQPageNode {
   mainEntity: QuestionNode[];
 }
 
-/** Membres de l'énumération `ItemAvailability`, forme courte. */
+/** `ItemAvailability`, forme courte. */
 export type ItemAvailabilityName =
   | "BackOrder"
   | "Discontinued"
@@ -239,7 +218,7 @@ export type ItemAvailabilityName =
   | "Reserved"
   | "SoldOut";
 
-/** Membres de l'énumération `ItemAvailability`, forme URI — celle qui est émise. */
+/** `ItemAvailability`, forme URI : celle qui est émise. */
 export type ItemAvailabilityUrl =
   | "https://schema.org/BackOrder"
   | "https://schema.org/Discontinued"
@@ -287,21 +266,13 @@ export type GraphNode =
   | ReviewNode
   | PersonNode;
 
-/**
- * Enfant d'un `@graph`, vu depuis la sortie.
- *
- * Volontairement large : `graph()` fusionne les noeuds de meme `@id`, ce qui
- * efface les types precis a l'execution. La garantie d'assignabilite a
- * `schema-dts` porte sur chaque builder pris isolement (`test/types.test-d.ts`),
- * pas sur le conteneur. Gardez une reference sur la sortie du builder si vous
- * avez besoin du type exact.
- */
+/** Enfant d'un `@graph`. Large : la fusion efface les types précis. */
 export interface GraphChild {
   "@type": string;
   "@id"?: string;
 }
 
-/** Sortie de `graph()` : un seul `@context`, tous les noeuds a plat. */
+/** Sortie de `graph()` : un seul `@context`, tous les nœuds à plat. */
 export interface GraphDocument {
   "@context": SchemaContext;
   "@graph": GraphChild[];

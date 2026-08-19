@@ -10,40 +10,32 @@ import {
 import { formatMinutes, mergeWeekSlots, type TimeSlot, type WeekSlots } from "./merge.js";
 
 const MINUTES_PER_DAY = 24 * 60;
-/** Convention Google : « ouvert jusqu'à minuit » s'écrit `23:59`, jamais `24:00`. */
 const END_OF_DAY = MINUTES_PER_DAY - 1;
+const ALWAYS_OPEN = /^24\s*\/\s*7$/;
+const CLOSED_RULE = /^(.*?)\s*off$/i;
+const TIME = /^(\d{1,2}):(\d{2})$/;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-/** Fragment de chaîne avec sa position d'origine, pour des erreurs localisables. */
 interface Fragment {
   value: string;
   position: number;
 }
 
-/**
- * Découpe en conservant les positions dans la chaîne d'origine. Les fragments
- * sont trimés, et leur `position` pointe le premier caractère non blanc — donc
- * l'erreur désigne le jeton fautif, pas l'espace qui le précède.
- */
 function splitFragments(text: string, separator: string, offset: number): Fragment[] {
   const fragments: Fragment[] = [];
-  let start = 0;
+  let cursor = offset;
 
-  for (;;) {
-    const found = text.indexOf(separator, start);
-    const end = found === -1 ? text.length : found;
-    const raw = text.slice(start, end);
-    const leading = raw.length - raw.trimStart().length;
-    fragments.push({ value: raw.trim(), position: offset + start + leading });
-    if (found === -1) break;
-    start = found + separator.length;
+  for (const part of text.split(separator)) {
+    const leading = part.length - part.trimStart().length;
+    fragments.push({ value: part.trim(), position: cursor + leading });
+    cursor += part.length + separator.length;
   }
 
   return fragments;
 }
 
-/** `"9:00"` → 540. Lève une {@link InvalidTimeError} sur tout ce qui n'est pas `HH:MM`. */
 function parseTime(fragment: Fragment): number {
-  const match = /^(\d{1,2}):(\d{2})$/.exec(fragment.value);
+  const match = TIME.exec(fragment.value);
   if (!match?.[1] || !match[2]) {
     throw new InvalidTimeError(
       `Heure invalide « ${fragment.value} » à la position ${fragment.position}. Format attendu : HH:MM (00:00 à 24:00).`,
@@ -67,10 +59,9 @@ function parseTime(fragment: Fragment): number {
   return total === MINUTES_PER_DAY ? END_OF_DAY : total;
 }
 
-/** `"09:00-18:00"` → créneau. Le chevauchement de minuit (`22:00-02:00`) est permis. */
 function parseSlot(fragment: Fragment): TimeSlot {
-  const bounds = splitFragments(fragment.value, "-", fragment.position);
-  if (bounds.length !== 2 || !bounds[0] || !bounds[1]) {
+  const [from, to, ...extra] = splitFragments(fragment.value, "-", fragment.position);
+  if (!from || !to || extra.length > 0) {
     throw new InvalidTimeError(
       `Créneau invalide « ${fragment.value} » à la position ${fragment.position}. Format attendu : HH:MM-HH:MM.`,
       fragment.value,
@@ -78,8 +69,8 @@ function parseSlot(fragment: Fragment): TimeSlot {
     );
   }
 
-  const opens = parseTime(bounds[0]);
-  const closes = parseTime(bounds[1]);
+  const opens = parseTime(from);
+  const closes = parseTime(to);
 
   if (opens === closes) {
     throw new InvalidTimeError(
@@ -92,7 +83,22 @@ function parseSlot(fragment: Fragment): TimeSlot {
   return { opens, closes };
 }
 
-/** `"Mo-Fr"`, `"Mo,We,Fr"`, `"Fr-Mo"` → index de jours. */
+function parseDaySpec(daySpec: Fragment): number[] {
+  const [from, to, ...extra] = splitFragments(daySpec.value, "-", daySpec.position);
+  if (!from || extra.length > 0) {
+    throw new InvalidDayError(
+      `Plage de jours invalide « ${daySpec.value} » à la position ${daySpec.position}. Format attendu : Mo-Fr.`,
+      daySpec.value,
+      daySpec.position,
+    );
+  }
+
+  const first = dayIndex(from.value, from.position);
+  if (!to) return [first];
+
+  return expandDayRange(first, dayIndex(to.value, to.position));
+}
+
 function parseDays(fragment: Fragment): number[] {
   if (fragment.value === "") {
     throw new InvalidDayError(
@@ -102,49 +108,11 @@ function parseDays(fragment: Fragment): number[] {
     );
   }
 
-  const days: number[] = [];
-  for (const daySpec of splitFragments(fragment.value, ",", fragment.position)) {
-    const bounds = splitFragments(daySpec.value, "-", daySpec.position);
-    const first = bounds[0];
-    if (!first) {
-      throw new InvalidDayError(
-        `Plage de jours invalide « ${daySpec.value} » à la position ${daySpec.position}.`,
-        daySpec.value,
-        daySpec.position,
-      );
-    }
-
-    if (bounds.length === 1) {
-      days.push(dayIndex(first.value, first.position));
-      continue;
-    }
-
-    const last = bounds[1];
-    if (bounds.length !== 2 || !last) {
-      throw new InvalidDayError(
-        `Plage de jours invalide « ${daySpec.value} » à la position ${daySpec.position}. Format attendu : Mo-Fr.`,
-        daySpec.value,
-        daySpec.position,
-      );
-    }
-
-    const from = dayIndex(first.value, first.position);
-    const to = dayIndex(last.value, last.position);
-    days.push(...expandDayRange(from, to));
-  }
-
-  return days;
+  return splitFragments(fragment.value, ",", fragment.position).flatMap(parseDaySpec);
 }
 
-/**
- * Applique une règle à la semaine. La règle **remplace** les créneaux des jours
- * qu'elle nomme, elle ne s'y ajoute pas : c'est ce qui fait marcher
- * `"Mo-Fr 09:00-18:00; We off"` (mercredi retiré) autant que
- * `"Mo-Fr 09:00-18:00; Fr 09:00-12:00"` (vendredi raccourci).
- */
 function applyRule(week: WeekSlots, rule: Fragment): void {
-  // `24/7` est un raccourci, pas une règle jour + créneaux.
-  if (/^24\s*\/\s*7$/.test(rule.value)) {
+  if (ALWAYS_OPEN.test(rule.value)) {
     for (let day = 0; day < DAYS_IN_WEEK; day += 1) {
       week.set(day, [{ opens: 0, closes: END_OF_DAY }]);
     }
@@ -154,14 +122,14 @@ function applyRule(week: WeekSlots, rule: Fragment): void {
   const firstDigit = rule.value.search(/\d/);
 
   if (firstDigit === -1) {
-    const off = /^(.*?)\s*off$/i.exec(rule.value);
-    if (!off || off[1] === undefined) {
+    const closed = CLOSED_RULE.exec(rule.value);
+    if (!closed || closed[1] === undefined) {
       throw new OpeningHoursError(
         `Règle incomplète « ${rule.value} » à la position ${rule.position}. Attendu : des jours suivis de créneaux (« Mo-Fr 09:00-18:00 ») ou de « off ».`,
         rule.position,
       );
     }
-    for (const day of parseDays({ value: off[1].trim(), position: rule.position })) {
+    for (const day of parseDays({ value: closed[1].trim(), position: rule.position })) {
       week.set(day, []);
     }
     return;
@@ -180,18 +148,8 @@ function applyRule(week: WeekSlots, rule: Fragment): void {
 }
 
 /**
- * Traduit le DSL d'horaires en `OpeningHoursSpecification[]`.
- *
- * ```ts
- * parseOpeningHours("Mo-Fr 08:00-12:00,14:00-18:00; Sa 09:00-12:00");
- * ```
- *
- * Les horaires sont exprimés en **heure locale de l'établissement** : schema.org
- * ne porte pas de fuseau, et ce package n'en invente pas.
- *
- * @throws {InvalidDayError} jour inconnu ou règle sans jour
- * @throws {InvalidTimeError} heure hors bornes, mal formée, ou créneau nul
- * @throws {OpeningHoursError} règle incomplète
+ * Traduit le DSL d'horaires en `OpeningHoursSpecification[]`, en heure locale de
+ * l'établissement. Chaque règle remplace les créneaux des jours qu'elle nomme.
  */
 export function parseOpeningHours(
   input: string | readonly string[],
@@ -201,14 +159,11 @@ export function parseOpeningHours(
 
   const week: WeekSlots = new Map();
   for (const rule of splitFragments(source, ";", 0)) {
-    if (rule.value === "") continue;
-    applyRule(week, rule);
+    if (rule.value !== "") applyRule(week, rule);
   }
 
   return mergeWeekSlots(week);
 }
-
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function assertIsoDate(value: string, label: string): string {
   if (!ISO_DATE.test(value)) {
@@ -217,7 +172,7 @@ function assertIsoDate(value: string, label: string): string {
       value,
     );
   }
-  // Écarte les dates impossibles (2026-02-30) : le round-trip ne recolle pas.
+
   const parsed = new Date(`${value}T00:00:00Z`);
   if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) {
     throw new InvalidDateError(`Date inexistante « ${value} » pour ${label}.`, value);
@@ -225,87 +180,81 @@ function assertIsoDate(value: string, label: string): string {
   return value;
 }
 
-/** `"9:00"` → `"09:00"`, `"24:00"` → `"23:59"`, pour les horaires exceptionnels. */
 function normalizeSpecialTime(value: string): string {
   return formatMinutes(parseTime({ value, position: 0 }));
 }
 
+function resolvePeriod(entry: SpecialHoursInput): { from: string; through: string | undefined } {
+  const { date, from, to } = entry;
+
+  if (date !== undefined && (from !== undefined || to !== undefined)) {
+    throw new OpeningHoursError(
+      `Horaire exceptionnel ambigu : « date » et « from »/« to » sont exclusifs (date = ${date}).`,
+    );
+  }
+
+  if (date !== undefined) {
+    const day = assertIsoDate(date, "date");
+    return { from: day, through: day };
+  }
+
+  if (from === undefined) {
+    throw new OpeningHoursError(
+      "Horaire exceptionnel sans date : fournir « date », ou « from » (et « to »).",
+    );
+  }
+
+  const start = assertIsoDate(from, "from");
+  const end = to === undefined ? undefined : assertIsoDate(to, "to");
+
+  if (end !== undefined && end < start) {
+    throw new InvalidDateError(
+      `Période inversée : « to » (${end}) précède « from » (${start}).`,
+      end,
+    );
+  }
+
+  return { from: start, through: end };
+}
+
 /**
- * Traduit les fermetures et horaires exceptionnels en
- * `OpeningHoursSpecification` datées (`validFrom` / `validThrough`), à placer
- * dans `specialOpeningHoursSpecification`.
- *
- * Un jour fermé s'écrit `opens: "00:00", closes: "00:00"` — c'est la convention
- * Google pour « fermé ce jour-là ».
- *
- * L'ordre des entrées est conservé.
+ * Traduit les fermetures et horaires exceptionnels en specs datées. `closed`
+ * produit `00:00`–`00:00`, la convention Google pour « fermé ce jour-là ».
  */
 export function parseSpecialOpeningHours(
   entries: readonly SpecialHoursInput[],
 ): OpeningHoursSpecificationNode[] {
-  const specs: OpeningHoursSpecificationNode[] = [];
-
-  for (const entry of entries) {
-    const { date, from, to, closed, opens, closes } = entry;
-
-    if (date !== undefined && (from !== undefined || to !== undefined)) {
-      throw new OpeningHoursError(
-        `Horaire exceptionnel ambigu : « date » et « from »/« to » sont exclusifs (date = ${date}).`,
-      );
-    }
-
-    let validFrom: string;
-    let validThrough: string | undefined;
-
-    if (date !== undefined) {
-      validFrom = assertIsoDate(date, "date");
-      validThrough = validFrom;
-    } else if (from !== undefined) {
-      validFrom = assertIsoDate(from, "from");
-      validThrough = to === undefined ? undefined : assertIsoDate(to, "to");
-      if (validThrough !== undefined && validThrough < validFrom) {
-        throw new InvalidDateError(
-          `Période inversée : « to » (${validThrough}) précède « from » (${validFrom}).`,
-          validThrough,
-        );
-      }
-    } else {
-      throw new OpeningHoursError(
-        "Horaire exceptionnel sans date : fournir « date », ou « from » (et « to »).",
-      );
-    }
+  return entries.map((entry) => {
+    const { closed, opens, closes } = entry;
+    const { from, through } = resolvePeriod(entry);
 
     if (closed === true) {
       if (opens !== undefined || closes !== undefined) {
         throw new OpeningHoursError(
-          `Horaire exceptionnel contradictoire (${validFrom}) : « closed: true » exclut « opens »/« closes ».`,
+          `Horaire exceptionnel contradictoire (${from}) : « closed: true » exclut « opens »/« closes ».`,
         );
       }
-      specs.push({
+      return {
         "@type": "OpeningHoursSpecification",
-        // Convention Google pour « fermé ce jour-là ».
         opens: "00:00",
         closes: "00:00",
-        validFrom,
-        validThrough,
-      });
-      continue;
+        validFrom: from,
+        validThrough: through,
+      };
     }
 
     if (opens === undefined || closes === undefined) {
       throw new OpeningHoursError(
-        `Horaire exceptionnel incomplet (${validFrom}) : fournir « opens » et « closes », ou « closed: true ».`,
+        `Horaire exceptionnel incomplet (${from}) : fournir « opens » et « closes », ou « closed: true ».`,
       );
     }
 
-    specs.push({
+    return {
       "@type": "OpeningHoursSpecification",
       opens: normalizeSpecialTime(opens),
       closes: normalizeSpecialTime(closes),
-      validFrom,
-      validThrough,
-    });
-  }
-
-  return specs;
+      validFrom: from,
+      validThrough: through,
+    };
+  });
 }

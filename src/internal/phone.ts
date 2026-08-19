@@ -1,17 +1,5 @@
-/**
- * Normalisation des numéros de téléphone en E.164 (§8.6).
- *
- * Google veut `+33243123456`, pas `02 43 12 34 56`. Un numéro national sans
- * indicatif est **ambigu** : on refuse plutôt que de deviner.
- *
- * Ce n'est pas `libphonenumber` et ça n'essaie pas de l'être : pas de validation
- * de plan de numérotation, pas de formatage régional. Juste « rendre l'entrée
- * exploitable, ou dire pourquoi c'est impossible ». Zéro dépendance oblige.
- */
-
 /** Numéro impossible à convertir en E.164 sans deviner. */
 export class InvalidPhoneError extends Error {
-  /** Le numéro refusé, tel que fourni. */
   readonly input: string;
 
   constructor(message: string, input: string) {
@@ -21,11 +9,6 @@ export class InvalidPhoneError extends Error {
   }
 }
 
-/**
- * Indicatifs pays, table curée : UE/EEE, Suisse, Royaume-Uni, plus les
- * destinations courantes des PME françaises. Un pays absent n'est pas un bug —
- * il suffit d'écrire le numéro directement en E.164.
- */
 const DIAL_CODES: Record<string, string> = {
   AT: "43",
   BE: "32",
@@ -67,18 +50,10 @@ const DIAL_CODES: Record<string, string> = {
   US: "1",
 };
 
-/**
- * Pays où le zéro de tête fait partie du numéro et **ne doit pas** être retiré.
- * L'Italie est le cas d'école : `02 1234567` (Milan) devient `+39021234567`.
- */
 const KEEPS_TRUNK_ZERO = new Set(["IT"]);
 
-/** E.164 : 15 chiffres maximum, indicatif compris. */
-const MAX_E164_DIGITS = 15;
-/** En dessous, ce n'est pas un numéro d'établissement mais une faute de frappe. */
 const MIN_E164_DIGITS = 8;
-
-/** Sépateurs tolérés : espaces (y compris insécables), points, tirets, barres. */
+const MAX_E164_DIGITS = 15;
 const SEPARATORS = /[\s.\-/]/g;
 
 function assertDigitCount(digits: string, input: string): void {
@@ -90,18 +65,19 @@ function assertDigitCount(digits: string, input: string): void {
   }
 }
 
+function stripFormatting(raw: string): string {
+  return raw.replace(/\(0\)/g, "").replace(SEPARATORS, "");
+}
+
+function withoutDialPrefix(cleaned: string): string | null {
+  if (cleaned.startsWith("+")) return cleaned.slice(1);
+  if (cleaned.startsWith("00")) return cleaned.slice(2);
+  return null;
+}
+
 /**
- * Normalise un téléphone en E.164.
- *
- * ```ts
- * normalizePhone("02 43 12 34 56", "FR"); // "+33243123456"
- * normalizePhone("+33 (0)2 43 12 34 56"); // "+33243123456"
- * ```
- *
- * @param input numéro tel que saisi
- * @param defaultCountry code ISO 3166-1 alpha-2 utilisé si le numéro est national
- * @throws {InvalidPhoneError} numéro vide, non numérique, hors bornes, ou
- *   national sans indicatif exploitable
+ * Normalise un téléphone en E.164. Un numéro national exige `defaultCountry`,
+ * sans quoi il est refusé plutôt que deviné.
  */
 export function normalizePhone(input: string, defaultCountry?: string): string {
   const raw = input.trim();
@@ -109,14 +85,8 @@ export function normalizePhone(input: string, defaultCountry?: string): string {
     throw new InvalidPhoneError("Téléphone vide.", input);
   }
 
-  // `+33 (0)2 43 …` : notation mixte où le (0) est le préfixe national, à jeter.
-  const cleaned = raw.replace(/\(0\)/g, "").replace(SEPARATORS, "");
-
-  const international = cleaned.startsWith("+")
-    ? cleaned.slice(1)
-    : cleaned.startsWith("00")
-      ? cleaned.slice(2)
-      : null;
+  const cleaned = stripFormatting(raw);
+  const international = withoutDialPrefix(cleaned);
 
   if (international !== null) {
     if (!/^\d+$/.test(international)) {

@@ -4,15 +4,7 @@ import type { FaqInput, NodeOptions } from "../types/input.js";
 import type { FAQPageNode, QuestionNode, WithContext } from "../types/output.js";
 import { withContext } from "./shared.js";
 
-/**
- * Construit la `FAQPage`.
- *
- * Google n'affiche les rich results de FAQ que pour les sites officiels et
- * administratifs, mais le balisage reste lu et compris. Une seule `FAQPage` par
- * page.
- *
- * @throws {TypeError} liste vide — `mainEntity` est obligatoire
- */
+/** Construit la `FAQPage`. Une seule par page. */
 export function faq(
   items: readonly FaqInput[],
   options: NodeOptions = {},

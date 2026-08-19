@@ -5,11 +5,6 @@ import { LOCAL_BUSINESS_TYPES } from "../src/types/business-types.js";
 const SOURCE = readFileSync(new URL("../src/types/business-types.ts", import.meta.url), "utf8");
 
 describe("LOCAL_BUSINESS_TYPES", () => {
-  /**
-   * L'annotation `readonly LocalBusinessType[]` empêche déjà un intrus d'entrer
-   * dans le tableau. Ce test couvre l'autre sens : un `@type` ajouté à l'union
-   * mais oublié dans le tableau serait silencieusement ignoré par `validate()`.
-   */
   it("liste exactement les membres de l'union curée, dans le même ordre", () => {
     const union = SOURCE.slice(0, SOURCE.indexOf("export const LOCAL_BUSINESS_TYPES"));
     const members = [...union.matchAll(/^\s*\|\s*"([A-Za-z]+)"/gm)].map((match) => match[1]);

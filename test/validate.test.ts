@@ -5,7 +5,6 @@ import { localBusiness } from "../src/builders/local-business.js";
 import { website } from "../src/builders/website.js";
 import { validate } from "../src/validate/index.js";
 
-/** Un nœud qui coche tout ce que Google demande et recommande. */
 const COMPLETE = {
   type: "Plumber",
   id: "https://plomberie-dupont.fr/#business",

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { localBusiness } from "../src/builders/local-business.js";
 import { serialize } from "../src/serialize.js";
 
-/** La charge du plan §7, celle qui casse une page et ouvre une XSS. */
 const PAYLOAD = "</script><script>alert(1)</script>";
 
 describe("serialize — échappement (§8.1)", () => {

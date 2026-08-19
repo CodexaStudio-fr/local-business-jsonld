@@ -1,20 +1,10 @@
-/**
- * Catalogue de messages, en français.
- *
- * Chaque message dit **ce qui manque**, **pourquoi ça compte** et, quand c'est
- * utile, **quoi écrire à la place**. Un client artisan qui lit « image
- * manquante » sans savoir que Google veut trois ratios n'est pas aidé.
- */
-
-/** Identifiants stables des règles. Sûrs à tester, à filtrer, à ignorer. */
+/** Identifiants stables des règles. */
 export type IssueCode =
-  // Erreurs : bloquent les rich results.
   | "missing-context"
   | "missing-name"
   | "missing-address"
   | "rating-out-of-range"
   | "rating-count-invalid"
-  // Avertissements : recommandés par Google, ou pièges connus.
   | "missing-image"
   | "missing-telephone"
   | "missing-url"
@@ -29,7 +19,7 @@ export type IssueCode =
   | "closes-at-24"
   | "dangling-reference";
 
-/** Un message prend éventuellement un détail (valeur fautive, propriété visée). */
+/** Un message prend éventuellement un détail : valeur fautive, propriété visée. */
 export type MessageFactory = (detail?: string) => string;
 
 export const MESSAGES_FR: Record<IssueCode, MessageFactory> = {
