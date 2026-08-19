@@ -25,6 +25,17 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm check:package
+
+      - name: etat de l'authentification npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "auth npm : secret NPM_TOKEN"
+          else
+            echo "::warning::NPM_TOKEN absent. La publication passera par OIDC, qui exige un trusted publisher deja declare sur npmjs pour ce paquet. Un paquet jamais publie ne peut pas en avoir : npm repondra 404 sur le PUT."
+          fi
+
       - uses: changesets/action@v1
         with:
           publish: pnpm release
@@ -33,4 +44,6 @@ jobs:
           title: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
