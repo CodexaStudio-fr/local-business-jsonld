@@ -1,0 +1,131 @@
+{
+  "name": "local-business-jsonld",
+  "version": "0.0.0",
+  "description": "Typed schema.org LocalBusiness JSON-LD generator with an opening-hours DSL and @graph composition. Zero runtime dependencies.",
+  "keywords": [
+    "json-ld",
+    "jsonld",
+    "schema.org",
+    "localbusiness",
+    "local-seo",
+    "structured-data",
+    "rich-results",
+    "opening-hours",
+    "next",
+    "nextjs",
+    "seo"
+  ],
+  "license": "MIT",
+  "author": "CodexaStudio",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./next": {
+      "import": {
+        "types": "./dist/next/index.d.ts",
+        "default": "./dist/next/index.js"
+      },
+      "require": {
+        "types": "./dist/next/index.d.cts",
+        "default": "./dist/next/index.cjs"
+      }
+    },
+    "./validate": {
+      "import": {
+        "types": "./dist/validate/index.d.ts",
+        "default": "./dist/validate/index.js"
+      },
+      "require": {
+        "types": "./dist/validate/index.d.cts",
+        "default": "./dist/validate/index.cjs"
+      }
+    },
+    "./opening-hours": {
+      "import": {
+        "types": "./dist/opening-hours/index.d.ts",
+        "default": "./dist/opening-hours/index.js"
+      },
+      "require": {
+        "types": "./dist/opening-hours/index.d.cts",
+        "default": "./dist/opening-hours/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@11.6.0",
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:types": "vitest run --typecheck --dir test",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "check:package": "publint && attw --pack .",
+    "size": "size-limit",
+    "release": "changeset publish"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@biomejs/biome": "^2.5.9",
+    "@changesets/cli": "^3.0.0",
+    "@size-limit/preset-small-lib": "^13.0.3",
+    "@types/react": "^19.2.18",
+    "@vitest/coverage-v8": "^4.1.10",
+    "publint": "^0.3.23",
+    "react": "^19.2.8",
+    "schema-dts": "^2.0.0",
+    "size-limit": "^13.0.3",
+    "tsdown": "^0.22.14",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  },
+  "size-limit": [
+    {
+      "name": "core (.)",
+      "path": "dist/index.js",
+      "import": "{ localBusiness, graph, serialize }",
+      "limit": "4 kB"
+    },
+    {
+      "name": "opening-hours",
+      "path": "dist/opening-hours/index.js",
+      "import": "{ parseOpeningHours }",
+      "limit": "2 kB"
+    },
+    {
+      "name": "validate",
+      "path": "dist/validate/index.js",
+      "import": "{ validate }",
+      "limit": "3 kB"
+    }
+  ]
+}
