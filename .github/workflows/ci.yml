@@ -7,11 +7,12 @@ on:
 
 jobs:
   test:
+    name: outils (node ${{ matrix.node }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        node: [20, 22, 24]
+        node: [22, 24]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -26,6 +27,32 @@ jobs:
       - run: pnpm test:types
       - run: pnpm build
       - run: pnpm check:package
+      - uses: actions/upload-artifact@v4
+        if: matrix.node == 24
+        with:
+          name: dist
+          path: dist
+          retention-days: 1
+
+  runtime:
+    name: dist (node ${{ matrix.node }})
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - run: node scripts/smoke.mjs
+      - run: node scripts/smoke.cjs
 
   size:
     runs-on: ubuntu-latest

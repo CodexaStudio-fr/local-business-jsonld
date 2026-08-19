@@ -212,6 +212,11 @@ sur la porte qui change, pas le balisage.
 Dual ESM/CJS, `.d.ts` et `.d.cts`. Vérifié en CI par `publint` et
 `@arethetypeswrong/cli` (profil `node16` : ESM, CJS et bundler).
 
+Le `dist` construit est exécuté en CI sur **Node 18, 20, 22 et 24**, en ESM comme
+en CJS, sans installer quoi que ce soit — c'est le corollaire du zéro dépendance
+runtime. La chaîne d'outils, elle, demande Node 22.13 ou plus, parce que pnpm 11
+le demande.
+
 ---
 
 ## Pour aller plus loin

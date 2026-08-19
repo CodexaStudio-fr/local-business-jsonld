@@ -100,7 +100,8 @@
     "lint:fix": "biome check --write .",
     "check:package": "publint && attw --pack . --profile node16",
     "size": "size-limit",
-    "release": "changeset publish"
+    "release": "changeset publish",
+    "test:runtime": "node scripts/smoke.mjs && node scripts/smoke.cjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
