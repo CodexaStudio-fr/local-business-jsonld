@@ -26,14 +26,14 @@ jobs:
       - run: pnpm build
       - run: pnpm check:package
 
-      - name: etat de l'authentification npm
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: version du CLI npm
         run: |
-          if [ -n "$NPM_TOKEN" ]; then
-            echo "auth npm : secret NPM_TOKEN"
-          else
-            echo "::warning::NPM_TOKEN absent. La publication passera par OIDC, qui exige un trusted publisher deja declare sur npmjs pour ce paquet. Un paquet jamais publie ne peut pas en avoir : npm repondra 404 sur le PUT."
+          required=11.5.1
+          version=$(npm --version)
+          echo "npm $version"
+          if [ "$(printf '%s\n%s\n' "$required" "$version" | sort -V | head -1)" != "$required" ]; then
+            echo "::error::Trusted publishing exige npm >= $required, or ce runner a $version. En dessous, le handshake OIDC echoue et le registre repond un 404 trompeur."
+            exit 1
           fi
 
       - uses: changesets/action@v1
@@ -44,6 +44,3 @@ jobs:
           title: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: "true"
