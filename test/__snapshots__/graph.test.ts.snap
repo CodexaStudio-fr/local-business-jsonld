@@ -1,0 +1,55 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`graph — ordre et contenu > compose un graphe de quatre nœuds liés 1`] = `
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@id": "https://plomberie-dupont.fr/#business",
+      "@type": "Plumber",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "FR",
+        "addressLocality": "Le Mans",
+        "postalCode": "72000",
+        "streetAddress": "12 rue Nationale",
+      },
+      "name": "Plomberie Dupont",
+    },
+    {
+      "@id": "https://plomberie-dupont.fr/#website",
+      "@type": "WebSite",
+      "publisher": {
+        "@id": "https://plomberie-dupont.fr/#business",
+      },
+      "url": "https://plomberie-dupont.fr/",
+    },
+    {
+      "@id": "https://plomberie-dupont.fr/#fil",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "item": "https://plomberie-dupont.fr/",
+          "name": "Accueil",
+          "position": 1,
+        },
+      ],
+    },
+    {
+      "@id": "https://plomberie-dupont.fr/#faq",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "R",
+          },
+          "name": "Q",
+        },
+      ],
+    },
+  ],
+}
+`;

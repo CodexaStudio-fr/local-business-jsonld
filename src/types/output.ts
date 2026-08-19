@@ -18,8 +18,11 @@ export interface IdRef {
 /** Ajoute le `@context` racine à un nœud. */
 export type WithContext<T> = T & { "@context": SchemaContext };
 
-/** Retire le `@context` d'un nœud (les enfants d'un `@graph` n'en portent pas). */
-export type Contextless<T> = Omit<T, "@context">;
+/**
+ * Retire le `@context` d'un noeud (les enfants d'un `@graph` n'en portent pas).
+ * Distributif : appliqué a une union, il conserve l'union.
+ */
+export type Contextless<T> = T extends unknown ? Omit<T, "@context"> : never;
 
 /** Noms de jours schema.org, forme courte (celle utilisée par la doc Google). */
 export type DayOfWeekName =
@@ -221,6 +224,36 @@ export interface FAQPageNode {
   mainEntity: QuestionNode[];
 }
 
+/** Membres de l'énumération `ItemAvailability`, forme courte. */
+export type ItemAvailabilityName =
+  | "BackOrder"
+  | "Discontinued"
+  | "InStock"
+  | "InStoreOnly"
+  | "LimitedAvailability"
+  | "MadeToOrder"
+  | "OnlineOnly"
+  | "OutOfStock"
+  | "PreOrder"
+  | "PreSale"
+  | "Reserved"
+  | "SoldOut";
+
+/** Membres de l'énumération `ItemAvailability`, forme URI — celle qui est émise. */
+export type ItemAvailabilityUrl =
+  | "https://schema.org/BackOrder"
+  | "https://schema.org/Discontinued"
+  | "https://schema.org/InStock"
+  | "https://schema.org/InStoreOnly"
+  | "https://schema.org/LimitedAvailability"
+  | "https://schema.org/MadeToOrder"
+  | "https://schema.org/OnlineOnly"
+  | "https://schema.org/OutOfStock"
+  | "https://schema.org/PreOrder"
+  | "https://schema.org/PreSale"
+  | "https://schema.org/Reserved"
+  | "https://schema.org/SoldOut";
+
 export interface OfferNode {
   "@type": "Offer";
   name?: string;
@@ -228,7 +261,7 @@ export interface OfferNode {
   price?: string;
   priceCurrency?: string;
   url?: string;
-  availability?: string;
+  availability?: ItemAvailabilityUrl;
 }
 
 export interface ServiceNode<T extends string = "Service"> {
@@ -254,8 +287,22 @@ export type GraphNode =
   | ReviewNode
   | PersonNode;
 
-/** Sortie de `graph()`. */
+/**
+ * Enfant d'un `@graph`, vu depuis la sortie.
+ *
+ * Volontairement large : `graph()` fusionne les noeuds de meme `@id`, ce qui
+ * efface les types precis a l'execution. La garantie d'assignabilite a
+ * `schema-dts` porte sur chaque builder pris isolement (`test/types.test-d.ts`),
+ * pas sur le conteneur. Gardez une reference sur la sortie du builder si vous
+ * avez besoin du type exact.
+ */
+export interface GraphChild {
+  "@type": string;
+  "@id"?: string;
+}
+
+/** Sortie de `graph()` : un seul `@context`, tous les noeuds a plat. */
 export interface GraphDocument {
   "@context": SchemaContext;
-  "@graph": Contextless<GraphNode>[];
+  "@graph": GraphChild[];
 }

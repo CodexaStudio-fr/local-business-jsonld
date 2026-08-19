@@ -6,9 +6,26 @@
  * sortie invalide.
  */
 
-import type { LocalBusiness, Plumber, Restaurant, WithContext } from "schema-dts";
+import type {
+  BreadcrumbList,
+  FAQPage,
+  LocalBusiness,
+  Organization,
+  Plumber,
+  Restaurant,
+  Review,
+  Service,
+  WebSite,
+  WithContext,
+} from "schema-dts";
 import { expectTypeOf, test } from "vitest";
+import { breadcrumbs } from "../src/builders/breadcrumbs.js";
+import { faq } from "../src/builders/faq.js";
 import { localBusiness } from "../src/builders/local-business.js";
+import { organization } from "../src/builders/organization.js";
+import { review } from "../src/builders/review.js";
+import { service } from "../src/builders/service.js";
+import { website } from "../src/builders/website.js";
 import type { AnyLocalBusinessType, LocalBusinessType } from "../src/types/business-types.js";
 
 /**
@@ -88,4 +105,66 @@ test("le @type littéral remonte dans le type de retour", () => {
 test("sans @type explicite, le retour est un LocalBusiness générique", () => {
   const node = localBusiness({ name: "X" });
   expectTypeOf(node["@type"]).toEqualTypeOf<"LocalBusiness">();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Builders secondaires
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("website est assignable à WithContext<WebSite>", () => {
+  const node = website({
+    id: "#website",
+    url: "https://x.fr",
+    name: "Plomberie Dupont",
+    inLanguage: "fr-FR",
+    publisher: "#business",
+    searchAction: "https://x.fr/recherche?q={search_term_string}",
+  });
+  expectTypeOf(node).toExtend<WithContext<WebSite>>();
+});
+
+test("organization est assignable à WithContext<Organization>", () => {
+  const node = organization({
+    id: "#groupe",
+    name: "Groupe Dupont",
+    url: "https://x.fr",
+    logo: "https://x.fr/logo.png",
+    address: { city: "Le Mans", postalCode: "72000" },
+    sameAs: ["https://fb.com/x"],
+    vatID: "FR12345678901",
+    founder: "Marc Dupont",
+  });
+  expectTypeOf(node).toExtend<WithContext<Organization>>();
+});
+
+test("faq est assignable à WithContext<FAQPage>", () => {
+  const node = faq([{ question: "Intervenez-vous en urgence ?", answer: "Oui, 7j/7." }]);
+  expectTypeOf(node).toExtend<WithContext<FAQPage>>();
+});
+
+test("service est assignable à WithContext<Service>", () => {
+  const node = service({
+    id: "#depannage",
+    name: "Dépannage plomberie",
+    provider: "#business",
+    areaServed: ["Le Mans"],
+    offers: [{ name: "Déplacement", price: 60, availability: "InStock" }],
+  });
+  expectTypeOf(node).toExtend<WithContext<Service>>();
+});
+
+test("review est assignable à WithContext<Review>", () => {
+  const node = review({ author: "Claire M.", rating: 5, body: "Rapide." });
+  expectTypeOf(node).toExtend<WithContext<Review>>();
+});
+
+/**
+ * Écart assumé : schema.org type `ListItem.item` en `Thing`, mais Google
+ * documente — et son Rich Results Test attend — une URL en chaîne. On suit
+ * Google, donc `itemListElement` est exclu de l'assertion. Tout le reste du
+ * nœud est vérifié.
+ */
+test("breadcrumbs est assignable à BreadcrumbList, itemListElement excepté", () => {
+  const node = breadcrumbs([{ name: "Accueil", url: "https://x.fr" }, { name: "Dépannage" }]);
+  expectTypeOf(node).toExtend<WithContext<Omit<BreadcrumbList, "itemListElement">>>();
 });

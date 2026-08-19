@@ -4,6 +4,7 @@
  */
 
 import type { AnyLocalBusinessType } from "./business-types.js";
+import type { ItemAvailabilityName, ItemAvailabilityUrl } from "./output.js";
 
 /** Référence à un autre nœud : `"#business"`, une URL absolue, ou `{ "@id": … }`. */
 export type Ref = string | { "@id": string };
@@ -112,6 +113,12 @@ export interface BuilderOptions {
    * `graph()` peut aussi la fournir globalement.
    */
   baseUrl?: string;
+}
+
+/** Options des builders dont l'`@id` n'est pas déduit d'une URL. */
+export interface NodeOptions extends BuilderOptions {
+  /** Identifiant du nœud, pour le référencer depuis le graphe. */
+  id?: string;
 }
 
 export interface LocalBusinessInput<T extends AnyLocalBusinessType = AnyLocalBusinessType> {
@@ -235,8 +242,8 @@ export interface OfferInput {
   /** Devise ISO 4217. Défaut : `"EUR"`. */
   priceCurrency?: string;
   url?: string;
-  /** URL schema.org d'`ItemAvailability`, ou nom court (`"InStock"`). */
-  availability?: string;
+  /** Disponibilité : nom court (`"InStock"`) ou URI schema.org complète. */
+  availability?: ItemAvailabilityName | ItemAvailabilityUrl;
 }
 
 export interface ServiceInput {
