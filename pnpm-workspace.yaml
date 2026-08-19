@@ -1,2 +1,7 @@
+# Réglages pnpm : depuis pnpm 11, ils ne sont plus lus depuis package.json.
+#
+# esbuild est une dépendance transitive de size-limit et a un script postinstall.
+# Sans cette autorisation explicite, `pnpm install --frozen-lockfile` échoue en
+# CI sur ERR_PNPM_IGNORED_BUILDS.
 allowBuilds:
-  esbuild: set this to true or false
+  esbuild: true

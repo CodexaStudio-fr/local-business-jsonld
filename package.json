@@ -147,10 +147,5 @@
       "gzip": true,
       "limit": "4 kB"
     }
-  ],
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
-  }
+  ]
 }
